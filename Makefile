@@ -48,7 +48,7 @@ BOOT_O := $(BOOT_S:%.S=$(OBJ_DIR)/%.o)
 BOOT_O += $(BOOT_C:%.c=$(OBJ_DIR)/%.o)
 
 KERNEL_C := $(shell find $(KERNEL_DIR) -name "*.c")
-KERNEL_S := $(wildcard $(KERNEL_DIR)/*.S)
+KERNEL_S := $(shell find $(KERNEL_DIR) -name "*.S")
 KERNEL_O := $(KERNEL_C:%.c=$(OBJ_DIR)/%.o)
 KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 
@@ -58,31 +58,31 @@ $(IMAGE): $(BOOT) $(KERNEL)
 			    @$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr
 
 $(BOOT): $(BOOT_O)
-	    $(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
-		$(OBJCOPY) --strip-all --only-section=.text --output-target=binary $@.out $@
-		@rm $@.out
+	$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
+	$(OBJCOPY) --strip-all --only-section=.text --output-target=binary $@.out $@
+	@rm $@.out
 	perl ./boot/genboot.pl $@
 #		ruby mbr.rb $@
 
 $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.S
-	    @mkdir -p $(OBJ_BOOT_DIR)
-		    $(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
+	@mkdir -p $(OBJ_BOOT_DIR)
+	$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
 
 $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.c
-	    @mkdir -p $(OBJ_BOOT_DIR)
-		    $(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
+	@mkdir -p $(OBJ_BOOT_DIR)
+	$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
 
 $(KERNEL): $(LD_SCRIPT)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
 	$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
-	    @mkdir -p $(OBJ_LIB_DIR)
-		    $(CC) $(CFLAGS) $< -o $@
+	@mkdir -p $(OBJ_LIB_DIR)
+	$(CC) $(CFLAGS) $< -o $@
 
 $(OBJ_KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.[cS]
-	    mkdir -p $(OBJ_DIR)/$(dir $<)
-		    $(CC) $(CFLAGS) ./kernel/include $< -o $@
+	mkdir -p $(OBJ_DIR)/$(dir $<)
+	$(CC) $(CFLAGS) -I ./kernel/include $< -o $@
 
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)
@@ -90,7 +90,7 @@ DEPS := $(shell find -name "*.d")
 .PHONY: qemu debug gdb clean
 
 qemu: $(IMAGE)
-	    $(QEMU) $(QEMU_OPTIONS) $(IMAGE)
+	$(QEMU) $(QEMU_OPTIONS) $(IMAGE)
 
 # Faster, but not suitable for debugging
 qemu-kvm: $(IMAGE)
