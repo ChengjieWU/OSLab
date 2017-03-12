@@ -20,7 +20,7 @@ CFLAGS += -ggdb3 #GDB调试信息
 CFLAGS += -fno-stack-protector
 
 QEMU_OPTIONS := -serial stdio #以标准输入输为串口(COM1)
-QEMU_OPTIONS += -d int #输出中断信息
+#QEMU_OPTIONS += -d int #输出中断信息
 QEMU_OPTIONS += -monitor telnet:127.0.0.1:1111,server,nowait #telnet monitor
 
 QEMU_DEBUG_OPTIONS := -S #启动不执行
@@ -73,8 +73,8 @@ $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.c
 		    $(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
 
 $(KERNEL): $(LD_SCRIPT)
-	$(KERNEL): $(KERNEL_O) $(LIB_O)
-	    $(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+$(KERNEL): $(KERNEL_O) $(LIB_O)
+	$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
 	    @mkdir -p $(OBJ_LIB_DIR)
