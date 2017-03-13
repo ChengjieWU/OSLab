@@ -27,6 +27,7 @@ int main()
 	init_vmem_addr();
 	init_vmem();
 	
+	printk("Here we go!\n");
 	while(1);
 	return 0;
 }
