@@ -14,6 +14,7 @@ void add_irq_handle(int,void (*)(void));
 
 void game();
 
+
 int main()
 {
 	init_idt();
@@ -32,20 +33,4 @@ int main()
 	
 	panic("This has not been implemented!");
 	return 0;
-}
-
-
-
-
-void game()
-{
-	init_vmem();
-	//uint32_t ct = 0;
-	while(1)
-	{
-		int t = handle_keys();
-		if (t != 0xff) printk("%x\n", t);
-		//uint32_t temp = get_time();
-		//ct = temp;
-	}
 }
