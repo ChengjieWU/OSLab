@@ -31,6 +31,8 @@ int main()
 	printk("Here we go!\n");
 	game();
 	
-	panic("Exit!");
+	init_vmem();
+	
+	assert(0);
 	return 0;
 }
