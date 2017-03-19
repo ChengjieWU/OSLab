@@ -1,17 +1,18 @@
 #include "common.h"
 #include "device/video.h"
-#include "device/video_mode.h"
 #include "x86.h"
+#include "device/keyboard.h"
+#include "device/timer.h"
+
 
 void init_idt();
 void init_i8259();
 void init_serial();
-void init_timer();
 void add_irq_handle(int,void (*)(void));
-void timer_event();
-void keyboard_event();
 
 
+
+void game();
 
 int main()
 {
@@ -25,9 +26,26 @@ int main()
 	sti();
 	
 	init_vmem_addr();
-	init_vmem();
 	
 	printk("Here we go!\n");
-	while(1);
+	game();
+	
+	panic("This has not been implemented!");
 	return 0;
+}
+
+
+
+
+void game()
+{
+	init_vmem();
+	//uint32_t ct = 0;
+	while(1)
+	{
+		int t = handle_keys();
+		if (t != 0xff) printk("%x\n", t);
+		//uint32_t temp = get_time();
+		//ct = temp;
+	}
 }

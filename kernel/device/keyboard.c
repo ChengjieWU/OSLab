@@ -16,16 +16,17 @@ static const int keycode_array[] = {
 static int key_state[NR_KEYS];
 
 void keyboard_event(void) {
-	int key_code = inb(0x60); printk("keycode == 0x%x\n", key_code);
+	int key_code = inb(0x60); 
+	//printk("keycode == 0x%x\n", key_code);
 	int i;
-	for (i = 0; i < NR_KEYS; i ++){
+	for (i = 0; i < NR_KEYS; i++){
 		if(key_code == keycode_array[i]) {
 			switch(key_state[i]) {
-				case KEY_STATE_EMPTY:
+				case KEY_STATE_EMPTY: 
 				case KEY_STATE_RELEASE:
 				case KEY_STATE_PRESS: key_state[i] = KEY_STATE_PRESS; break;
 				case KEY_STATE_WAIT_RELEASE: key_state[i] = KEY_STATE_WAIT_RELEASE; break;
-				default: /*assert(0);*/ break;
+				default: panic("keyboard error!\n");break;
 			}
 			break;
 		}
@@ -39,15 +40,44 @@ void keyboard_event(void) {
 int handle_keys() {
 	cli();
 	int i;
-	for(i=0; i<NR_KEYS; ++i) {
+	for(i = 0; i<NR_KEYS; ++i) {
 		if(key_state[i] == KEY_STATE_PRESS) {
 			key_state[i] = KEY_STATE_WAIT_RELEASE;
-			sti(); return keycode_array[i];
+			sti(); 
+			return keycode_array[i];
 		}
 		else if(key_state[i] == KEY_STATE_RELEASE) {
 			key_state[i] = KEY_STATE_EMPTY;
-			sti(); return keycode_array[i] + 0x80;
+			sti(); 
+			return keycode_array[i] + 0x80;
 		}
 	}
 	sti(); return 0xff;
+}
+
+
+
+
+static inline int
+get_keycode(int index) {
+	assert(index >= 0 && index < NR_KEYS);
+	return keycode_array[index];
+}
+
+static inline int
+query_key(int index) {
+	assert(index >= 0 && index < NR_KEYS);
+	return key_state[index];
+}
+
+static inline void
+release_key(int index) {
+	assert(index >= 0 && index < NR_KEYS);
+	key_state[index] = KEY_STATE_WAIT_RELEASE;
+}
+
+static inline void
+clear_key(int index) {
+	assert(index >= 0 && index < NR_KEYS);
+	key_state[index] = KEY_STATE_EMPTY;
 }

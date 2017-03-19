@@ -1,19 +1,89 @@
 #include "common.h"
 #include "irq.h"
 
-enum {SYS_write, SYS_time, SYS_kbd, SYS_video};
+//#include <sys/syscall.h>
 
-extern uint32_t time_tick;
-//int fs_write(int, void*, int);
-int handle_keys();
-int load_vmem(uint8_t*);
+
+
+void serial_printc(char);
+
+/*
+uint32_t mm_brk(uint32_t);
+int fs_ioctl(int, uint32_t, void *);
+
+int fs_open(const char*, int flags);
+int fs_read(int, void*, size_t);
+int fs_write(int, const void*, size_t);
+off_t fs_lseek(int, off_t, int);
+int fs_close(int);
+
+
+static void sys_brk(TrapFrame *tf) {
+	tf->eax = mm_brk(tf->ebx);
+}
+
+static void sys_ioctl(TrapFrame *tf) {
+	tf->eax = fs_ioctl(tf->ebx, tf->ecx, (void *)tf->edx);
+}
+
+static void sys_write(TrapFrame *tf) {
+	int fd = tf->ebx;
+	char* buf = (char*)tf->ecx;
+	int len = tf->edx;
+	if (fd == 1 || fd == 2) {
+		//asm volatile (".byte 0xd6" : : "a"(2), "c"(buf), "d"(len));
+		int i = 0;
+		for (i = 0; i < len; i++) {
+			serial_printc(buf[i]);
+		}
+		tf->eax = len;
+	}
+	else
+	{
+		tf->eax = fs_write(fd, buf, len);
+	}
+}
+
+static void sys_open(TrapFrame *tf) 
+{
+	tf->eax = fs_open((const char*)tf->ebx, tf->ecx);
+}
+
+static void sys_close(TrapFrame *tf) 
+{
+	tf->eax = fs_close(tf->ebx);
+}
+
+static void sys_read(TrapFrame *tf) 
+{
+	tf->eax = fs_read(tf->ebx, (char*)tf->ecx, tf->edx);
+}
+
+static void sys_lseek(TrapFrame *tf) {
+	tf->eax = fs_lseek(tf->ebx, tf->ecx, tf->edx);
+}
+*/
 
 void do_syscall(TrapFrame *tf) {
 	switch(tf->eax) {
-		//case SYS_write: tf->eax = fs_write(tf->ebx, (void *)tf->ecx, tf->edx); break;
-		case SYS_time:	tf->eax = time_tick; break;
-		case SYS_kbd:	tf->eax = handle_keys(); break;
-		case SYS_video:	tf->eax = load_vmem((uint8_t *)tf->ebx); break;
-		default: panic("Unhandled system call: id = %d", tf->eax);
+		/* The `add_irq_handle' system call is artificial. We use it to
+		 * let user program register its interrupt handlers. But this is
+		 * very dangerous in a real operating system. Therefore such a
+		 * system call never exists in GNU/Linux.
+		 */
+
+		//case SYS_brk: sys_brk(tf); break;
+		//case SYS_ioctl: sys_ioctl(tf); break;
+
+		/* TODO: Add more system calls. */
+
+		//case SYS_write: sys_write(tf); break;
+		//case SYS_read: sys_read(tf); break;
+		//case SYS_open: sys_open(tf); break;
+		//case SYS_lseek: sys_lseek(tf); break;
+		//case SYS_close: sys_close(tf); break;
+
+		default: panic("Unhandled system call: id = %d, eip = 0x%08x", tf->eax, tf->eip);
 	}
 }
+

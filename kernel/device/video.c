@@ -1,5 +1,5 @@
 #include "device/video_mode.h"
-#include "logo.h"
+#include "picture.h"
 #include "string.h"
 #include "device/video.h"
 
@@ -11,7 +11,7 @@ void init_vmem_addr() {
 }
 
 void init_vmem() {
-	memcpy(vmem, gImage_PARK, SCR_SIZE);
+	memcpy(vmem, gImage_Universe, SCR_SIZE);
 }
 
 int load_vmem(uint8_t *buffer) {
