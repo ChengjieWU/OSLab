@@ -11,10 +11,16 @@ void init_vmem_addr() {
 }
 
 void init_vmem() {
-	memcpy(vmem, gImage_Universe, SCR_SIZE);
+	memset(vmem, 0, SCR_SIZE);
 }
 
 void load_vmem(const uint8_t *buffer, int position, int size) {
 	if (position >= SCR_SIZE) assert(0);
 	memcpy(vmem + position, buffer, size);
 }
+
+void fullScreen(const unsigned char* src)
+{
+	memcpy(vmem, src, SCR_SIZE);
+}
+

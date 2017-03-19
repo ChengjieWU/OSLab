@@ -20,19 +20,24 @@
 #define brickHalfWidth 30
 #define brickHalfHeight 12
 #define brickHalfSpace 5
+#define brickLeft 400
+#define brickTop 120
 
-#define speedSwitch 10
-#define step 10
+
+#define ballspeedx 9
+#define ballspeedy 9
+#define speedSwitch 1
+#define step 30
 
 uint32_t game_time = 0;
 
 
 bool brick[brickRow][brickColumn];
-int ball_x, ball_y;//小球的坐标
-int board_x;//木板的坐标
+int ball_x, ball_y;
+int board_x;
 const int board_y = 540;
-bool is_start;//判断是否小球正在运动
-int v_x, v_y;//小球坐标加的量
+bool is_start;
+int v_x, v_y;
 int state;
 
 
@@ -41,10 +46,6 @@ int abs(int a)
 	if (a > 0) return a;
 	else return -a;
 }
-//bool within(int x, int lower, int upper)
-//{
-	
-//}
 
 void draw_rectangular(int x, int y, int p, int q, union Pixels c)
 {
@@ -56,15 +57,14 @@ void draw_rectangular(int x, int y, int p, int q, union Pixels c)
 }
 void remove_rectangular(int x, int y, int p, int q)
 {
-	int size = (p - x) * 3;
+	int size = (p - x) * groudDepth;
 	int i;
 	for (i = y; i < q; i++)
 	{
-		int position = (i * groudWidth + x) * 3;
+		int position = (i * groudWidth + x) * groudDepth;
 		load_vmem(gImage_Universe + position, position, size);
 	}
 }
-
 void draw_ball()
 {
 	union Pixels c;
@@ -87,8 +87,8 @@ void remove_board()
 }
 void remove_a_brick(int i, int j)
 {
-	int sx = 400 - brickColumn * brickHalfWidth - (brickColumn - 1) * brickHalfSpace;
-	int sy = 120 - brickRow * brickHalfHeight - (brickRow - 1) * brickHalfSpace;
+	int sx = brickLeft - brickColumn * brickHalfWidth - (brickColumn - 1) * brickHalfSpace;
+	int sy = brickTop - brickRow * brickHalfHeight - (brickRow - 1) * brickHalfSpace;
 	int x = sx + j * 2 * (brickHalfWidth+brickHalfSpace);
 	int y = sy + i * 2 * (brickHalfHeight+brickHalfSpace);
 	remove_rectangular(x, y, x + 2 * brickHalfWidth, y + 2 * brickHalfHeight);
@@ -97,10 +97,10 @@ void remove_a_brick(int i, int j)
 void draw_brick()
 {
 	union Pixels c;
-	c.blue = 0; c.green = 180; c.red = 180;
+	c.blue = 180; c.green = 50; c.red = 180;
 	int i, j;
-	int sx = 400 - brickColumn * brickHalfWidth - (brickColumn - 1) * brickHalfSpace;
-	int sy = 120 - brickRow * brickHalfHeight - (brickRow - 1) * brickHalfSpace;
+	int sx = brickLeft - brickColumn * brickHalfWidth - (brickColumn - 1) * brickHalfSpace;
+	int sy = brickTop - brickRow * brickHalfHeight - (brickRow - 1) * brickHalfSpace;
 	for (i = 0; i < brickRow; i++)
 		for (j = 0; j < brickColumn; j++)
 			if (brick[i][j])
@@ -112,11 +112,9 @@ void draw_brick()
 }
 
 
-
-
 void init_display()
 {
-	init_vmem();
+	fullScreen(gImage_Universe);
 	draw_ball();
 	draw_board();
 	draw_brick();
@@ -130,8 +128,8 @@ void init_Game()
 	ball_x = 400;
 	ball_y = 300;
 	memset(brick, true, sizeof brick);
-	v_x = 20;
-	v_y = -20;
+	v_x = ballspeedx;
+	v_y = ballspeedy;
 	init_display();
 }
 
@@ -167,16 +165,18 @@ bool collide_brick()
 	else return false;
 }
 
-void round()
+int round()
 {
 	is_start = true;
 	while (is_start)
-	{
+	{	
 		int key = handle_keys();
 		switch (key)
 		{
-			case K_LEFT: if (board_x >= boardHalfWidth && board_x >= step) {remove_board(); board_x -= step; draw_board();} break;
-			case K_RIGHT: if (board_x < groudWidth - boardHalfWidth && board_x < groudWidth - step) {remove_board(); board_x += step; draw_board();} break;
+			case K_LEFT: if (board_x - step >= boardHalfWidth) {remove_board(); board_x -= step; draw_board();} break;
+			case K_RIGHT: if (board_x + step < groudWidth - boardHalfWidth) {remove_board(); board_x += step; draw_board();} break;
+			case K_Z: return -1;
+			case K_ENTER: return 1;
 			default: break;
 		}
 			
@@ -184,25 +184,28 @@ void round()
 		if (game_time != current)
 		{
 			game_time = current;
+			if (ball_x + v_x < ballRadius || ball_x + v_x >= groudWidth - ballRadius) v_x = -v_x;
+			if (ball_y + v_y < ballRadius) v_y = -v_y;
+			if (ball_y + v_y >= groudHeight - ballRadius)
+			{
+				state = -1;
+				is_start = false;
+				continue;
+			}
 			remove_ball();
 			ball_x += v_x;
 			ball_y += v_y;
 			draw_ball();
-			if (ball_x == ballRadius || ball_x == groudWidth - ballRadius) v_x = -v_x;
-			else if (ball_y == 0) v_y = -v_y;
-			else if (ball_y == groudHeight - 1) 
-			{
-				state = -1;
-				is_start = false;
-			}
-			else if (collide_board()) v_y = -v_y;
-			else if (collide_brick())
+			draw_board();
+			if (collide_board()) v_y = -v_y;
+			if (collide_brick())
 			{
 				state = 1;
 				is_start = false;
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -217,8 +220,14 @@ void game()
 		if (key == K_Z) break;
 		else if (key == K_ENTER) 
 		{
-			round();
-			init_Game();
+			if (state != 0) {init_Game(); continue;}
+			int ret = round();
+			if (ret == -1) break;
+			else if (ret == 1) continue;
+			if (state == 1) fullScreen(gImage_SUCCESS);
+			else if (state == -1) fullScreen(gImage_FAILURE);
+			else panic("should not reach here");
 		}
 	}
+	
 }

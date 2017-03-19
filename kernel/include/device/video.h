@@ -32,6 +32,7 @@ extern uint8_t *vmem;
 void init_vmem_addr();
 void init_vmem();
 void load_vmem(const uint8_t*, int, int);
+void fullScreen(const unsigned char*);
 
 /*
 void clear_screen();

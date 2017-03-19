@@ -31,6 +31,6 @@ int main()
 	printk("Here we go!\n");
 	game();
 	
-	panic("This has not been implemented!");
+	panic("Exit!");
 	return 0;
 }
