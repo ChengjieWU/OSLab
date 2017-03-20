@@ -2,13 +2,13 @@
 #include "x86.h"
 #include "device/scan_code.h"
 
-#define NR_KEYS 6
+#define NR_KEYS 7
 
 enum {KEY_STATE_EMPTY, KEY_STATE_WAIT_RELEASE, KEY_STATE_RELEASE, KEY_STATE_PRESS};
 
 /* Only the following keys are used in NEMU-PAL. */
 static const int keycode_array[] = {
-	K_UP, K_DOWN, K_LEFT, K_RIGHT, K_Z, K_ENTER
+	K_UP, K_DOWN, K_LEFT, K_RIGHT, K_ENTER, K_SPACE, K_Q
 };
 
 

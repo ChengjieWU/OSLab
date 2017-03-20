@@ -1,4 +1,4 @@
-/* ELF32二进制文件头 */
+/* ELF32 */
 struct ELFHeader {
 	unsigned int   magic;
 	unsigned char  elf[12];
@@ -29,7 +29,7 @@ struct ProgramHeader {
 	unsigned int align;
 };
 
-/* I/O处理函数 */
+/* I/O */
 static inline char
 in_byte(short port) {
 	char data;

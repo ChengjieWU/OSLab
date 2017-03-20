@@ -1,5 +1,4 @@
 #include "device/video_mode.h"
-#include "picture.h"
 #include "string.h"
 #include "device/video.h"
 

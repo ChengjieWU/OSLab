@@ -1,12 +1,9 @@
 #include "common.h"
 #include "device/video.h"
-#include "x86.h"
 #include "device/keyboard.h"
 #include "device/timer.h"
-#include "stdio.h"
-#include "string.h"
 #include "picture.h"
-
+#include "string.h"
 
 #define groudWidth SCR_WIDTH
 #define groudHeight SCR_HEIGHT
@@ -16,16 +13,16 @@
 #define boardHalfWidth 60
 #define boardHalfHeight 8
 #define brickRow 5
-#define brickColumn 10
+#define brickColumn 8
 #define brickHalfWidth 30
 #define brickHalfHeight 12
 #define brickHalfSpace 8
 #define brickLeft 400
-#define brickTop 180
+#define brickTop 160
 #define boardTop 540
 
-#define ballspeedx 8
-#define ballspeedy 8
+#define ballspeedx 10
+#define ballspeedy 10
 #define speedSwitch 1
 #define step 25
 
@@ -243,8 +240,9 @@ int round()
 		{
 			case K_LEFT: if (board_x - step >= boardHalfWidth) {remove_board(); board_x -= step; draw_board();} break;
 			case K_RIGHT: if (board_x + step < groudWidth - boardHalfWidth) {remove_board(); board_x += step; draw_board();} break;
-			case K_Z: return -1;
-			case K_ENTER: return 1;
+			case K_Q: return -1;
+			case K_ENTER:
+			case K_SPACE: return 1;
 			default: break;
 		}
 			
@@ -285,8 +283,8 @@ void game()
 	while (true)
 	{
 		key = handle_keys();
-		if (key == K_Z) break;
-		else if (key == K_ENTER) 
+		if (key == K_Q) break;
+		else if (key == K_ENTER || key == K_SPACE) 
 		{
 			if (state != 0) {init_Game(); continue;}
 			int ret = round();
