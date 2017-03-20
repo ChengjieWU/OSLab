@@ -36,7 +36,6 @@ void timer_event(void) {
 	time_tick ++;
 }
 
-uint32_t get_time()
-{
+volatile uint32_t get_time() {
 	return time_tick;
 }

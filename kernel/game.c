@@ -12,22 +12,22 @@
 #define groudHeight SCR_HEIGHT
 #define groudDepth SCR_DEPTH
 
-#define ballRadius 10
+#define ballRadius 8
 #define boardHalfWidth 60
 #define boardHalfHeight 8
 #define brickRow 5
 #define brickColumn 10
 #define brickHalfWidth 30
 #define brickHalfHeight 12
-#define brickHalfSpace 5
+#define brickHalfSpace 8
 #define brickLeft 400
 #define brickTop 180
-
+#define boardTop 540
 
 #define ballspeedx 8
 #define ballspeedy 8
 #define speedSwitch 1
-#define step 30
+#define step 25
 
 uint32_t game_time = 0;
 
@@ -35,7 +35,7 @@ uint32_t game_time = 0;
 bool brick[brickRow][brickColumn];
 int ball_x, ball_y;
 int board_x;
-const int board_y = 540;
+const int board_y = boardTop;
 bool is_start;
 int v_x, v_y;
 int state;
@@ -43,37 +43,56 @@ int state;
 
 int abs(int a)
 {
-	if (a > 0) return a;
+	if (a >= 0) return a;
 	else return -a;
+}
+int symbolInteger(int a)
+{
+	if (a > 0) return 1;
+	else if (a == 0) return 0;
+	else return -1;
 }
 void sideORplatform(int x, int y)
 {
-	float ty, tx, fy, fx, k, unit;
-	if (abs(v_x)>=abs(v_y)) 
+	int o_ball_x = ball_x - v_x;
+	int o_ball_y = ball_y - v_y;
+	float k = (float)v_x / (float)v_y;
+#ifdef __DEBUG__
+	printk("%d, %d, %d, %d\n", o_ball_x, x, o_ball_y, y);
+#endif
+	if (abs(o_ball_x - x) <= brickHalfWidth + ballRadius) {v_y = -v_y; return;}
+	else if (abs(o_ball_y - y) <= brickHalfHeight + ballRadius) {v_x = -v_x; return;}
+	else
 	{
-		k = (float)v_x/v_y;
-		unit = 0.2;
-		ty = ball_y; tx = ball_x; fy = y; fx = x;
-		while (abs(fy - ty) <= ballRadius+brickHalfHeight && abs(fx - tx) <= ballRadius+brickHalfWidth)
+#ifdef __DEBUG__
+		printk("haha\n");
+#endif
+		bool x_axis = o_ball_x > x + boardHalfWidth + ballRadius;
+		bool y_axis = o_ball_y > y + boardHalfHeight + ballRadius;
+		if (x_axis && y_axis)
 		{
-			ty -= unit;
-			tx -= unit * k;
+			float kd = (o_ball_x - ((float)x + boardHalfWidth + ballRadius))/(o_ball_y - ((float)y + boardHalfHeight + ballRadius));
+			if (kd > k) v_y = -v_y;
+			else v_x = -v_x;
 		}
-		if (abs(y - ty) > ballRadius+brickHalfHeight) v_y = -v_y;
-		if (abs(x - tx) > ballRadius+brickHalfWidth) v_x = -v_x;
-	}
-	else 
-	{
-		k = (float)v_y/v_x;
-		unit = 0.2;
-		ty = ball_x; tx = ball_y; fy = x; fx = y;
-		while (abs(fy - ty) <= ballRadius+brickHalfHeight && abs(fx - tx) <= ballRadius+brickHalfWidth)
+		else if (x_axis && !y_axis)
 		{
-			ty -= unit;
-			tx -= unit * k;
+			float kd = (o_ball_x - ((float)x + boardHalfWidth + ballRadius))/(o_ball_y - ((float)y - boardHalfHeight - ballRadius));
+			if (kd < k) v_y = -v_y;
+			else v_x = -v_x;
 		}
-		if (abs(y - ty) > ballRadius+brickHalfHeight) v_x = -v_x;
-		if (abs(x - tx) > ballRadius+brickHalfWidth) v_y = -v_y;
+		else if (!x_axis && y_axis)
+		{
+			float kd = (o_ball_x - ((float)x - boardHalfWidth - ballRadius))/(o_ball_y - ((float)y + boardHalfHeight + ballRadius));
+			if (kd < k) v_y = -v_y;
+			else v_x = -v_x;
+		}
+		else //(!x_axis && !y_axis)
+		{
+			float kd = (o_ball_x - ((float)x - boardHalfWidth - ballRadius))/(o_ball_y - ((float)y - boardHalfHeight - ballRadius));
+			if (kd > k) v_y = -v_y;
+			else v_x = -v_x;
+		}
 	}
 }
 
@@ -159,8 +178,8 @@ void init_Game()
 	ball_y = 300;
 	memset(brick, true, sizeof brick);
 	v_x = ballspeedx;
-	v_y = ballspeedy + get_time()%4;
-	printk("%d", get_time);
+	v_y = ballspeedy;
+	//printk("%d", get_time);
 	init_display();
 }
 
@@ -172,10 +191,15 @@ bool collide_board()
 	{
 		float gap = (float)abs(board_x - ball_x);
 		float total = (float)boardHalfWidth;
-		if (abs(v_x) > 5)
+		if (gap > total/3)
 		{
-			if (gap < 2*total/3) v_x = v_x - (board_x - ball_x)/abs(board_x - ball_x);
-			else if (gap >= 2*total/3) v_x = v_x - 2*(board_x - ball_x)/abs(board_x - ball_x);
+			int safter = v_x - symbolInteger(board_x - ball_x);
+			if (gap < 2*total/3 && abs(safter) > 5) v_x = safter;
+			else 
+			{	
+				safter = v_x - 2 * symbolInteger(board_x - ball_x);
+				if (gap >= 2*total/3 && abs(safter) > 5) v_x = safter;
+			}
 		}
 		return true;
 	}
@@ -192,9 +216,9 @@ bool collide_brick()
 		for (j = 0; j < brickColumn; j++)
 			if (brick[i][j])
 			{
-				int x = sx + j * 2 * (brickHalfWidth+brickHalfSpace);
-				int y = sy + i * 2 * (brickHalfHeight+brickHalfSpace);
-				if (abs(y-ball_y) <= ballRadius+brickHalfHeight && abs(x-ball_x) <= ballRadius+brickHalfWidth)
+				int x = sx + j * 2 * (brickHalfWidth + brickHalfSpace);
+				int y = sy + i * 2 * (brickHalfHeight + brickHalfSpace);
+				if (abs(y - ball_y) <= ballRadius + brickHalfHeight && abs(x - ball_x) <= ballRadius + brickHalfWidth)
 				{
 					brick[i][j] = false;
 					remove_a_brick(i, j);

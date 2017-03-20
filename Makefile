@@ -66,11 +66,13 @@ $(BOOT): $(BOOT_O)
 
 $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.S
 	@mkdir -p $(OBJ_BOOT_DIR)
-	$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
+	@$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
+	@echo cc $< -o $@
 
 $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.c
 	@mkdir -p $(OBJ_BOOT_DIR)
-	$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
+	@$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
+	@echo cc $< -o $@
 
 $(KERNEL): $(LD_SCRIPT)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
@@ -78,11 +80,13 @@ $(KERNEL): $(KERNEL_O) $(LIB_O)
 
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
 	@mkdir -p $(OBJ_LIB_DIR)
-	$(CC) $(CFLAGS) $< -o $@
+	@$(CC) $(CFLAGS) $< -o $@
+	@echo cc $< -o $@
 
 $(OBJ_KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.[cS]
-	mkdir -p $(OBJ_DIR)/$(dir $<)
-	$(CC) $(CFLAGS) -I ./kernel/include $< -o $@
+	@mkdir -p $(OBJ_DIR)/$(dir $<)
+	@$(CC) $(CFLAGS) -I ./kernel/include $< -o $@
+	@echo cc $< -o $@
 
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)
