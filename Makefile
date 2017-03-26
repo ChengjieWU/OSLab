@@ -18,7 +18,7 @@ CFLAGS := -Wall -Werror -Wfatal-errors #开启所有警告, 视警告为错误, 
 CFLAGS += -MD #生成依赖文件
 CFLAGS += -std=gnu11 -m32 -c #编译标准, 目标架构, 只编译
 CFLAGS += -I . #头文件搜索目录
-CFLAGS += -I ./lib/include/
+CFLAGS += -I ./lib/include
 CFLAGS += -O0 #不开优化, 方便调试
 CFLAGS += -fno-builtin #禁止内置函数
 CFLAGS += -ggdb3 #GDB调试信息
@@ -72,8 +72,10 @@ $(IMAGE): $(BOOT) $(PROGRAM)
 
 $(BOOT): $(BOOT_O)
 	@mkdir -p $(BIN_DIR)
-	$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
-	$(OBJCOPY) --strip-all --only-section=.text --output-target=binary $@.out $@
+	@echo ld -o $@
+	@$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
+	@echo objcopy $@.out $@
+	@$(OBJCOPY) --strip-all --only-section=.text --output-target=binary $@.out $@
 	@rm $@.out
 	perl ./boot/genboot.pl $@
 #		ruby mbr.rb $@
@@ -92,7 +94,8 @@ $(PROGRAM): $(KERNEL) $(GAME)
 $(KERNEL): $(LD_SCRIPT)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
-	$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+	@echo ld -o $@
+	@$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 	perl ./kernel/genkernel.pl $@
 
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
@@ -109,7 +112,8 @@ $(OBJ_KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.[cS]
 $(GAME): $(GAME_LD_SCRIPT)
 $(GAME): $(GAME_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
-	$(LD) -m elf_i386 -T $(GAME_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+	@echo ld -o $@
+	@$(LD) -m elf_i386 -T $(GAME_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 $(OBJ_GAME_DIR)/%.o: $(GAME_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)/$(dir $<)

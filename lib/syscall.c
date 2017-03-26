@@ -26,14 +26,6 @@ uint32_t getTime() {
 	return syscall(SYS_time);
 }
 
-/*int get_time() {
-	return syscall(SYS_time);
+int readKey() {
+	return syscall(SYS_keyboard);
 }
-
-int get_kbd() {
-	return syscall(SYS_kbd);
-}
-
-int put_video(uint8_t *buffer) {
-	return syscall(SYS_video, buffer);
-}*/

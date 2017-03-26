@@ -4,6 +4,9 @@
 #include "string.h"
 #include "picture.h"
 #include "time.h"
+#include "keyboard.h"
+#include "video_common.h"
+#include "scan_code.h"
 
 #define groudWidth SCR_WIDTH
 #define groudHeight SCR_HEIGHT
@@ -95,7 +98,7 @@ void sideORplatform(int x, int y)
 	}
 }
 
-/*--------------------------------------------------------------------------
+/*--------------------------------------------------------------------------*/
 
 void draw_rectangular(int x, int y, int p, int q, union Pixels c)
 {
@@ -161,7 +164,7 @@ void draw_brick()
 }
 
 
---------------------------------------------------------------------------
+/*--------------------------------------------------------------------------*/
 void init_display()
 {
 	fullVideo(gImage_Universe);
@@ -184,7 +187,7 @@ void init_Game()
 }
 
 
---------------------------------------------------------------------------
+/*--------------------------------------------------------------------------*/
 bool collide_board()
 {
 	if (abs(board_y-ball_y) <= ballRadius+boardHalfHeight && abs(board_x-ball_x) <= ballRadius+boardHalfWidth) 
@@ -232,13 +235,13 @@ bool collide_brick()
 }
 
 
---------------------------------------------------------------------------
+/*--------------------------------------------------------------------------*/
 int round()
 {
 	is_start = true;
 	while (is_start)
 	{	
-		int key = handle_keys();
+		int key = readKey();
 		switch (key)
 		{
 			case K_LEFT: if (board_x - step >= boardHalfWidth) {remove_board(); board_x -= step; draw_board();} break;
@@ -249,7 +252,7 @@ int round()
 			default: break;
 		}
 			
-		uint32_t current = get_time()/speedSwitch;
+		uint32_t current = getTime()/speedSwitch;
 		if (game_time != current)
 		{
 			game_time = current;
@@ -277,16 +280,16 @@ int round()
 	return 0;
 }
 
-*/
+
 
 int game()
 {
 	printf("We are now in game!\n");
-	/*init_Game();
+	init_Game();
 	int key;
 	while (true)
 	{
-		key = handle_keys();
+		key = readKey();
 		if (key == K_Q) break;
 		else if (key == K_ENTER || key == K_SPACE) 
 		{
@@ -294,10 +297,10 @@ int game()
 			int ret = round();
 			if (ret == -1) break;
 			else if (ret == 1) continue;
-			if (state == 1) fullScreen(gImage_SUCCESS);
-			else if (state == -1) fullScreen(gImage_FAILURE);
-			else panic("should not reach here");
+			if (state == 1) fullVideo(gImage_SUCCESS);
+			else if (state == -1) fullVideo(gImage_FAILURE);
+			else return -1;
 		}
-	}*/
+	}
 	return 0;
 }
