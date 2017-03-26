@@ -1,4 +1,3 @@
-
 #define GDT_ENTRY(n)  \
 	((n) << 3)
 

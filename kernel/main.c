@@ -11,16 +11,31 @@
 void readseg(unsigned char*,int,int);
 
 
-
-
+#ifdef IA32_PAGE
+void init_page();
+#endif
 void init_idt();
 void init_i8259();
 void init_serial();
 void add_irq_handle(int,void (*)(void));
-
+void init_cond();
 
 
 int main()
+{
+#ifdef IA32_PAGE
+	init_page();
+	/* After paging is enabled, transform %esp to virtual address. */
+	asm volatile("addl %0, %%esp" : : "i"(KOFFSET));
+#endif
+	/* Jump to init_cond() to continue initialization. */
+	asm volatile("jmp *%0" : : "r"(init_cond));
+
+	panic("should not reach here");
+	return 0;
+}
+
+void init_cond()
 {
 	init_idt();
 	
@@ -57,10 +72,7 @@ int main()
 	//init_vmem();
 	
 	assert(0);
-	return 0;
 }
-
-
 
 
 void waitdisk(void) {

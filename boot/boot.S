@@ -2,15 +2,13 @@
 # 位置，然后设置%CS=0000h, %IP=7C00h
 
 #include "asm.h"
+#include "mmu.h"
 
 # 从此开始是16位代码
 .code16
 .globl start
 start:
 	cli                       # 关闭外部中断
-
-#	movw    $0x13, %ax        # 切换到图形模式
-#	int     $0x10             # 使用BIOS中断切换比较容易。在实现OS时不需此步骤
 
 	# Open graph mode:
 	movw	$0x4f02, %ax
@@ -22,6 +20,7 @@ start:
 	movw	$0x0115, %cx
 	movw	$0x7e00, %di
 	int		$0x10
+
 
 	# 设置正确的段寄存器
 	xorw    %ax, %ax          # %AX = 0
@@ -65,17 +64,17 @@ start32:
 
 	# 设置栈位置。栈从此没有切换过，请注意栈的大小！
 	movl	$0, %ebp
-	movl    $0x8000000, %esp     # %ESP = $0x8000000
-	call    bootmain          # 跳转到C代码执行，此处不会返回
+	movl    $(128 << 20), %esp     # %ESP = $0x8000000
+	call    bootmain          # jump to C code
 
 # GDT
 .p2align 2                         # 对齐
 gdt:
-	SEG_NULLASM                    # GDT第一项必须为空
-	SEG_ASM(0xA, 0x0, 0xffffffff)  # 代码段描述符
-	SEG_ASM(0x2, 0x0, 0xffffffff)  # 数据段描述符
+	SEG_NULLASM                    			# GDT: the first term must be NULL
+	SEG_ASM(STA_X|STA_R, 0x0, 0xffffffff)	# executable and readable	code segment
+	SEG_ASM(STA_W, 0x0, 0xffffffff)			# writeable	data segment
 
-gdtdesc:                           # GDT描述符
-	.word   (gdtdesc - gdt - 1)    # GDT长度，留意地址运算
-	.long   gdt                    # GDT地址
+gdtdesc:                           # GDT descriptor
+	.word   (gdtdesc - gdt - 1)    # sizeof(gdt) - 1
+	.long   gdt                    # address gdt
 

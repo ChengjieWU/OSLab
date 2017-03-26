@@ -282,7 +282,7 @@ int round()
 
 
 
-int game()
+int main()
 {
 	printf("We are now in game!\n");
 	init_Game();
