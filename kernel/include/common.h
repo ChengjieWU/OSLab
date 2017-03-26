@@ -3,7 +3,7 @@
 
 #include "assert.h"
 #include "types.h"
-//#include "stdio.h"
+
 int printk(const char*, ...);
 
 #endif

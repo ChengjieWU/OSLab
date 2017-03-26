@@ -1,7 +1,10 @@
 STU_ID = 151220122
 
-BOOT   := boot.bin
-KERNEL := kernel.bin
+BIN_DIR := bin
+BOOT   := $(BIN_DIR)/boot.bin
+KERNEL := $(BIN_DIR)/kernel.bin
+GAME   := $(BIN_DIR)/game.bin
+PROGRAM := $(BIN_DIR)/program.bin
 IMAGE  := disk.bin
 
 CC      := gcc
@@ -31,15 +34,19 @@ QEMU_DEBUG_OPTIONS += -s #GDB调试服务器: 127.0.0.1:1234
 GDB_OPTIONS := -ex "target remote 127.0.0.1:1234"
 GDB_OPTIONS += -ex "symbol $(KERNEL)"
 
+
 OBJ_DIR        := obj
 LIB_DIR        := lib
 BOOT_DIR       := boot
 KERNEL_DIR     := kernel
+GAME_DIR	   := game
 OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
 OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
+OBJ_GAME_DIR   := $(OBJ_DIR)/$(GAME_DIR)
 
 LD_SCRIPT := $(shell find $(KERNEL_DIR) -name "*.ld")
+GAME_LD_SCRIPT	 := $(shell find $(GAME_DIR) -name "*.ld")
 
 LIB_C := $(wildcard $(LIB_DIR)/*.c)
 LIB_O := $(LIB_C:%.c=$(OBJ_DIR)/%.o)
@@ -54,31 +61,39 @@ KERNEL_S := $(shell find $(KERNEL_DIR) -name "*.S")
 KERNEL_O := $(KERNEL_C:%.c=$(OBJ_DIR)/%.o)
 KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 
-$(IMAGE): $(BOOT) $(KERNEL)
+GAME_C := $(shell find $(GAME_DIR) -name "*.c")
+GAME_O := $(GAME_C:%.c=$(OBJ_DIR)/%.o)
+
+$(IMAGE): $(BOOT) $(PROGRAM)
+	@mkdir -p $(BIN_DIR)
 	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
-	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr
+	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=1 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr
 
 $(BOOT): $(BOOT_O)
+	@mkdir -p $(BIN_DIR)
 	$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
 	$(OBJCOPY) --strip-all --only-section=.text --output-target=binary $@.out $@
 	@rm $@.out
 	perl ./boot/genboot.pl $@
 #		ruby mbr.rb $@
 
-$(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.S
+$(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.[cS]
 	@mkdir -p $(OBJ_BOOT_DIR)
 	@echo cc $< -o $@
 	@$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
+	
 
-$(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.c
-	@mkdir -p $(OBJ_BOOT_DIR)
-	@echo cc $< -o $@
-	@$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
+$(PROGRAM): $(KERNEL) $(GAME)
+	@mkdir -p $(BIN_DIR)
+	cat $(KERNEL) $(GAME) > $(PROGRAM)
+
 
 $(KERNEL): $(LD_SCRIPT)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
+	@mkdir -p $(BIN_DIR)
 	$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+	perl ./kernel/genkernel.pl $@
 
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
 	@mkdir -p $(OBJ_LIB_DIR)
@@ -89,6 +104,20 @@ $(OBJ_KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.[cS]
 	@mkdir -p $(OBJ_DIR)/$(dir $<)
 	@echo cc $< -o $@
 	@$(CC) $(CFLAGS) -I ./kernel/include $< -o $@
+	
+	
+$(GAME): $(GAME_LD_SCRIPT)
+$(GAME): $(GAME_O) $(LIB_O)
+	@mkdir -p $(BIN_DIR)
+	$(LD) -m elf_i386 -T $(GAME_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+$(OBJ_GAME_DIR)/%.o: $(GAME_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)/$(dir $<)
+	@echo cc $< -o $@
+	@$(CC) $(CFLAGS) -I ./game/include $< -o $@
+	
+
+	
 
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)
@@ -110,9 +139,9 @@ gdb:
 
 clean:
 	@rm -rf $(OBJ_DIR) 2> /dev/null
-	@rm -rf $(BOOT)    2> /dev/null
-	@rm -rf $(KERNEL)  2> /dev/null
 	@rm -rf $(IMAGE)   2> /dev/null
+	@rm -rf $(BIN_DIR) 2> /dev/null
+
 
 submit: clean
 	cd .. && tar cvj $(shell pwd | grep -o '[^/]*$$') > $(STU_ID).tar.bz2

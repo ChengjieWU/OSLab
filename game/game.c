@@ -1,9 +1,9 @@
-#include "common.h"
-#include "device/video.h"
-#include "device/keyboard.h"
-#include "device/timer.h"
-#include "picture.h"
+#include "types.h"
+#include "printf.h"
+#include "video.h"
 #include "string.h"
+#include "picture.h"
+#include "time.h"
 
 #define groudWidth SCR_WIDTH
 #define groudHeight SCR_HEIGHT
@@ -57,14 +57,14 @@ void sideORplatform(int x, int y)
 	int o_ball_y = ball_y - v_y;
 	float k = (float)v_x / (float)v_y;
 #ifdef __DEBUG__
-	printk("%d, %d, %d, %d\n", o_ball_x, x, o_ball_y, y);
+	printf("%d, %d, %d, %d\n", o_ball_x, x, o_ball_y, y);
 #endif
 	if (abs(o_ball_x - x) <= brickHalfWidth + ballRadius) {v_y = -v_y; return;}
 	else if (abs(o_ball_y - y) <= brickHalfHeight + ballRadius) {v_x = -v_x; return;}
 	else
 	{
 #ifdef __DEBUG__
-		printk("haha\n");
+		printf("haha\n");
 #endif
 		bool x_axis = o_ball_x > x + boardHalfWidth + ballRadius;
 		bool y_axis = o_ball_y > y + boardHalfHeight + ballRadius;
@@ -95,14 +95,15 @@ void sideORplatform(int x, int y)
 	}
 }
 
-/*--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------
+
 void draw_rectangular(int x, int y, int p, int q, union Pixels c)
 {
 	uint8_t buffer[groudDepth] = {c.blue, c.green, c.red};
 	int i, j;
 	for (i = y; i < q; i++)
 		for (j = x; j < p; j++)
-			load_vmem(buffer, (i * groudWidth + j) * groudDepth, groudDepth);
+			loadVideo(buffer, (i * groudWidth + j) * groudDepth, groudDepth);
 }
 void remove_rectangular(int x, int y, int p, int q)
 {
@@ -111,7 +112,7 @@ void remove_rectangular(int x, int y, int p, int q)
 	for (i = y; i < q; i++)
 	{
 		int position = (i * groudWidth + x) * groudDepth;
-		load_vmem(gImage_Universe + position, position, size);
+		loadVideo(gImage_Universe + position, position, size);
 	}
 }
 void draw_ball()
@@ -160,10 +161,10 @@ void draw_brick()
 }
 
 
-/*--------------------------------------------------------------------------*/
+--------------------------------------------------------------------------
 void init_display()
 {
-	fullScreen(gImage_Universe);
+	fullVideo(gImage_Universe);
 	draw_ball();
 	draw_board();
 	draw_brick();
@@ -178,12 +179,12 @@ void init_Game()
 	memset(brick, true, sizeof brick);
 	v_x = ballspeedx;
 	v_y = ballspeedy;
-	//printk("%d", get_time);
+	//printf("%d", get_time);
 	init_display();
 }
 
 
-/*--------------------------------------------------------------------------*/
+--------------------------------------------------------------------------
 bool collide_board()
 {
 	if (abs(board_y-ball_y) <= ballRadius+boardHalfHeight && abs(board_x-ball_x) <= ballRadius+boardHalfWidth) 
@@ -231,7 +232,7 @@ bool collide_brick()
 }
 
 
-/*--------------------------------------------------------------------------*/
+--------------------------------------------------------------------------
 int round()
 {
 	is_start = true;
@@ -276,11 +277,12 @@ int round()
 	return 0;
 }
 
+*/
 
-
-void game()
+int game()
 {
-	init_Game();
+	printf("We are now in game!\n");
+	/*init_Game();
 	int key;
 	while (true)
 	{
@@ -296,5 +298,6 @@ void game()
 			else if (state == -1) fullScreen(gImage_FAILURE);
 			else panic("should not reach here");
 		}
-	}
+	}*/
+	return 0;
 }

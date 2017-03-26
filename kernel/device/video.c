@@ -22,4 +22,3 @@ void fullScreen(const unsigned char* src)
 {
 	memcpy(vmem, src, SCR_SIZE);
 }
-

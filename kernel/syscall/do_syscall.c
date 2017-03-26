@@ -1,11 +1,11 @@
 #include "common.h"
 #include "irq.h"
-
-//#include <sys/syscall.h>
-
-
+#include "sys/syscall.h"
 
 void serial_printc(char);
+void load_vmem(const uint8_t *, int, int);
+void fullScreen(const unsigned char*);
+volatile uint32_t get_time();
 
 /*
 uint32_t mm_brk(uint32_t);
@@ -26,6 +26,7 @@ static void sys_ioctl(TrapFrame *tf) {
 	tf->eax = fs_ioctl(tf->ebx, tf->ecx, (void *)tf->edx);
 }
 
+*/
 static void sys_write(TrapFrame *tf) {
 	int fd = tf->ebx;
 	char* buf = (char*)tf->ecx;
@@ -38,12 +39,13 @@ static void sys_write(TrapFrame *tf) {
 		}
 		tf->eax = len;
 	}
-	else
+	/*else
 	{
 		tf->eax = fs_write(fd, buf, len);
-	}
+	}*/
 }
 
+/*
 static void sys_open(TrapFrame *tf) 
 {
 	tf->eax = fs_open((const char*)tf->ebx, tf->ecx);
@@ -77,7 +79,10 @@ void do_syscall(TrapFrame *tf) {
 
 		/* TODO: Add more system calls. */
 
-		//case SYS_write: sys_write(tf); break;
+		case SYS_write: sys_write(tf); break;
+		case SYS_loadVideo: load_vmem((const uint8_t *)tf->ebx, tf->ecx, tf->edx); break;
+		case SYS_fullVideo: fullScreen((const unsigned char*)tf->ebx); break;
+		case SYS_time: tf->eax = get_time(); break;
 		//case SYS_read: sys_read(tf); break;
 		//case SYS_open: sys_open(tf); break;
 		//case SYS_lseek: sys_lseek(tf); break;
