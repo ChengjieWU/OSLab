@@ -1,3 +1,5 @@
+STU_ID = 151220122
+
 BOOT   := boot.bin
 KERNEL := kernel.bin
 IMAGE  := disk.bin
@@ -91,7 +93,7 @@ $(OBJ_KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.[cS]
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)
 
-.PHONY: qemu debug gdb clean
+.PHONY: qemu debug gdb clean submit
 
 qemu: $(IMAGE)
 	$(QEMU) $(QEMU_OPTIONS) $(IMAGE)
@@ -111,3 +113,7 @@ clean:
 	@rm -rf $(BOOT)    2> /dev/null
 	@rm -rf $(KERNEL)  2> /dev/null
 	@rm -rf $(IMAGE)   2> /dev/null
+
+submit: clean
+	cd .. && tar cvj $(shell pwd | grep -o '[^/]*$$') > $(STU_ID).tar.bz2
+

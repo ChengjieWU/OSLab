@@ -10,6 +10,8 @@
 #define groudDepth SCR_DEPTH
 
 #define ballRadius 8
+#define ballTop 300
+#define ballLeft 300
 #define boardHalfWidth 60
 #define boardHalfHeight 8
 #define brickRow 5
@@ -21,8 +23,8 @@
 #define brickTop 160
 #define boardTop 540
 
-#define ballspeedx 10
-#define ballspeedy 10
+#define ballspeedx 9
+#define ballspeedy 9
 #define speedSwitch 1
 #define step 25
 
@@ -171,8 +173,8 @@ void init_Game()
 	is_start = false;
 	state = 0;
 	board_x = 400;
-	ball_x = 400;
-	ball_y = 300;
+	ball_x = ballLeft;
+	ball_y = ballTop;
 	memset(brick, true, sizeof brick);
 	v_x = ballspeedx;
 	v_y = ballspeedy;

@@ -21,13 +21,3 @@ void serial_printc(char a){
 	while(!is_serial_idle());
 	outb(PORT, a);
 }
-
-void serial_output_test(){
-	outb(PORT + 0, 'A');
-	outb(PORT + 0, 'N');
-	outb(PORT + 0, 'D');
-	outb(PORT + 0, 'S');
-	outb(PORT + 0, 'O');
-	outb(PORT + 0, 'R');
-	outb(PORT + 0, 'A');
-}
