@@ -1,3 +1,5 @@
+#include "x86/memory.h"
+
 #----|-----entry------|-errorcode-|-----id-----|---handler---|
 .globl vec0;    vec0:   pushl $0;  pushl    $0; jmp asm_do_irq
 .globl vec1;    vec1:   pushl $0;  pushl    $1; jmp asm_do_irq
@@ -20,8 +22,10 @@
 .globl irq0;     irq0:  pushl $0;  pushl $1000; jmp asm_do_irq
 .globl irq1;     irq1:  pushl $0;  pushl $1001; jmp asm_do_irq
 .globl irq14;   irq14:  pushl $0;  pushl $1014; jmp asm_do_irq
-.globl irq_empty;
-			irq_empty:	pushl $0;  pushl   $-1; jmp asm_do_irq
+.globl irq_empty; irq_empty:	pushl $0;  pushl   $-1; jmp asm_do_irq
+
+# the label "current" here is the memory address of variable current
+.extern current
 
 .globl asm_do_irq
 .extern irq_handle
@@ -29,13 +33,44 @@
 # The follow code is *VERY* important for interrupts and exceptions handling.
 # You should make yourself understand it clearly.
 
+#asm_do_irq:
+#	pushal
+#
+#	pushl %esp		# ???
+#	call irq_handle
+#	
+#	addl $4, %esp
+#	popal
+#	addl $8, %esp
+#	iret
+
+
 asm_do_irq:
+	cli
+	pushl %ds
+	pushl %es
+	pushl %fs
+	pushl %gs
 	pushal
 
-	pushl %esp		# ???
+	movw $SELECTOR_KERNEL(SEG_KERNEL_DATA), %ax
+	movw %ax, %ds
+	movw %ax, %es
+
+	pushl %esp
 	call irq_handle
 	
-	addl $4, %esp
+	movl current,%eax
+    movl (%eax),%esp
+	
+#addl $4, %esp # when you finish this task, this instruction should be removed
+
 	popal
+	popl %gs
+	popl %fs
+	popl %es
+	popl %ds
 	addl $8, %esp
+	
 	iret
+

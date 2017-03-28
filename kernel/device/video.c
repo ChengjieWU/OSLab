@@ -1,6 +1,7 @@
 #include "device/video_mode.h"
 #include "string.h"
 #include "device/video.h"
+#include "x86.h"
 
 uint8_t *vmem;
 

@@ -16,7 +16,8 @@ static const int keycode_array[] = {
 static int key_state[NR_KEYS];
 
 void keyboard_event(void) {
-	int key_code = inb(0x60); 
+	int key_code = in_byte(0x60); 
+	//printk("%x\n", key_code);
 	int i;
 	for (i = 0; i < NR_KEYS; i++){
 		if(key_code == keycode_array[i]) {
@@ -42,24 +43,27 @@ void keyboard_event(void) {
 	}
 }
 
+
 int handle_keys() {
-	cli();
+	//cli();
 	int i;
 	for(i = 0; i<NR_KEYS; ++i) {
 		if(key_state[i] == KEY_STATE_PRESS) {
 			key_state[i] = KEY_STATE_WAIT_RELEASE;
-			sti(); 
+			//sti();           /* WARNING: DON'T allow interruptions during the process!*/
+								/* That's because we are ring3 which dived into kernel! */
 			//printk("%d\n", keycode_array[i]);
 			return keycode_array[i];
 		}
 		else if(key_state[i] == KEY_STATE_RELEASE) {
 			key_state[i] = KEY_STATE_EMPTY;
-			sti(); 
+			//sti(); 
 			//printk("%d\n", keycode_array[i]);
 			return keycode_array[i] + 0x80;
 		}
 	}
-	sti(); return 0xff;
+	//sti();
+	return 0xff;
 }
 
 

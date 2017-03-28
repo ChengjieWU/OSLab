@@ -58,9 +58,9 @@ start:
 start32:
 	# 设置数据访问所用的段寄存器(%DS, %ES, %SS)
 	movw    $GDT_ENTRY(2), %ax
-	movw    %ax, %ds          # %DS = %AX
-	movw    %ax, %es          # %ES = %AX
-	movw    %ax, %ss          # %SS = %AX
+	movw    %ax, %ds          # %DS = %AX	data segment
+	movw    %ax, %es          # %ES = %AX	data segment
+	movw    %ax, %ss          # %SS = %AX	data segment
 
 	# 设置栈位置。栈从此没有切换过，请注意栈的大小！
 	movl	$0, %ebp

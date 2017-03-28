@@ -8,6 +8,8 @@
 #include "video_common.h"
 #include "scan_code.h"
 
+#define frequency(n) (1000/n)
+
 #define groudWidth SCR_WIDTH
 #define groudHeight SCR_HEIGHT
 #define groudDepth SCR_DEPTH
@@ -26,13 +28,15 @@
 #define brickTop 160
 #define boardTop 540
 
-#define ballspeedx 9
-#define ballspeedy 9
-#define speedSwitch 1
-#define step 25
+#define ballspeedx 1
+#define ballspeedy 1
+#define speedSwitch 4
+#define flashSwitch frequency(24)
+#define step 30
 
 uint32_t game_time = 0;
-
+uint32_t video_refresh_time = 0;
+uint32_t current = 0;		//This is the raw time read.
 
 bool brick[brickRow][brickColumn];
 int ball_x, ball_y;
@@ -110,12 +114,15 @@ void draw_rectangular(int x, int y, int p, int q, union Pixels c)
 }
 void remove_rectangular(int x, int y, int p, int q)
 {
-	int size = (p - x) * groudDepth;
-	int i;
-	for (i = y; i < q; i++)
+	if (video_refresh_time != current/flashSwitch) 
 	{
-		int position = (i * groudWidth + x) * groudDepth;
-		loadVideo(gImage_Universe + position, position, size);
+		int size = (p - x) * groudDepth;
+		int i;
+		for (i = y; i < q; i++)
+		{
+			int position = (i * groudWidth + x) * groudDepth;
+			loadVideo(gImage_Universe + position, position, size);
+		}
 	}
 }
 void draw_ball()
@@ -244,7 +251,7 @@ int round()
 		int key = readKey();
 		switch (key)
 		{
-			case K_LEFT: if (board_x - step >= boardHalfWidth) {remove_board(); board_x -= step; draw_board();} break;
+			case K_LEFT: if (board_x - step >= boardHalfWidth) {remove_board(); board_x -= step; draw_board();} break; 
 			case K_RIGHT: if (board_x + step < groudWidth - boardHalfWidth) {remove_board(); board_x += step; draw_board();} break;
 			case K_Q: return -1;
 			case K_ENTER:
@@ -252,8 +259,8 @@ int round()
 			default: break;
 		}
 			
-		uint32_t current = getTime()/speedSwitch;
-		if (game_time != current)
+		current = getTime();
+		if (game_time != current/speedSwitch)
 		{
 			game_time = current;
 			if (ball_x + v_x < ballRadius || ball_x + v_x >= groudWidth - ballRadius) v_x = -v_x;
@@ -287,6 +294,7 @@ int main()
 	printf("We are now in game!\n");
 	init_Game();
 	int key;
+	printf("After init!\n");
 	while (true)
 	{
 		key = readKey();
@@ -301,6 +309,7 @@ int main()
 			else if (state == -1) fullVideo(gImage_FAILURE);
 			else return -1;
 		}
+		
 	}
 	return 0;
 }

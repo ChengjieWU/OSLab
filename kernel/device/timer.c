@@ -25,15 +25,16 @@ union CmdByte mode = {
 
 void init_timer() {
 	int counter = PIT_FREQUENCE / HZ;
-	outb(PORT_CMD, mode.val);
-	outb(PORT_CH_0, counter & 0xFF);         // access low byte
-	outb(PORT_CH_0, (counter >> 8) & 0xFF);  // access high byte
+	out_byte(PORT_CMD, mode.val);
+	out_byte(PORT_CH_0, counter & 0xFF);         // access low byte
+	out_byte(PORT_CH_0, (counter >> 8) & 0xFF);  // access high byte
 }
 
 volatile uint32_t time_tick = 0;
 
 void timer_event(void) {
 	time_tick ++;
+	//printk("%u\n", time_tick);
 }
 
 volatile uint32_t get_time() {
