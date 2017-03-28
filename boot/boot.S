@@ -61,6 +61,8 @@ start32:
 	movw    %ax, %ds          # %DS = %AX	data segment
 	movw    %ax, %es          # %ES = %AX	data segment
 	movw    %ax, %ss          # %SS = %AX	data segment
+	movw	%ax, %fs
+	movw	%ax, %gs
 
 	# 设置栈位置。栈从此没有切换过，请注意栈的大小！
 	movl	$0, %ebp

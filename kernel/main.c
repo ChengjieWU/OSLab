@@ -7,9 +7,9 @@
 #include "device/timer.h"
 #include "process.h"
 
+/* Kernel stack starts at 0x8000000 (end of phy-address), which is set in boot/start.S */
+#define USER_STACK 0x6000000 //(96MB)
 
-
-#define SECTSIZE 512
 #define GAME_OFFSET_IN_DISK (10 * 1024 * 1024)
 void readseg(unsigned char*,int,int);
 
@@ -43,16 +43,15 @@ void init_cond()
 {
 	init_segment();
 	init_idt();
-	
 	init_i8259();
 	init_serial();
 	add_irq_handle(0, timer_event);
 	add_irq_handle(1, keyboard_event);
 	init_timer();
 	
-	sti();
 	init_vmem_addr();
 	init_vmem();
+	sti();
 	printk("Here we go!\n");
 	
 	struct Elf *elf;
@@ -72,60 +71,25 @@ void init_cond()
 		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
 	}
 	
-	//((void(*)(void))elf->e_entry)(); /* Here we go! */
+	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
 	
-	
-	asm volatile("pushl %0" : : "g"(SELECTOR_USER(4)));
+	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));
 	asm volatile("popl %%ds" : : : "memory");
-	asm volatile("pushl %0" : : "g"(SELECTOR_USER(4)));
+	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));
 	asm volatile("popl %%es" : : : "memory");
-	asm volatile("pushl %0" : : "g"(SELECTOR_USER(4)));
+	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));
 	asm volatile("popl %%fs" : : : "memory");
-	asm volatile("pushl %0" : : "g"(SELECTOR_USER(4)));
+	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));
 	asm volatile("popl %%gs" : : : "memory");
-	asm volatile("pushl %0" : : "g"(SELECTOR_USER(4)));
-	asm volatile("pushl %0" : : "g"(0x700000));
-	asm volatile("pushfl");
-	asm volatile("pushl %0" : : "g"(SELECTOR_USER(3)));
-	asm volatile("pushl %0" : : "g"(elf->e_entry));
+	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));	//push user's ss
+	asm volatile("pushl %0" : : "i"(USER_STACK));		//push user's esp
+	asm volatile("pushfl");								//push eflags
+	asm volatile("pushl %0" : : "r"(SELECTOR_USER(3)));	//push user's cs
+	asm volatile("pushl %0" : : "r"(elf->e_entry));		//push user's eip
+	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
+	asm volatile("movl %%esp, %0" : "=r"(tss.esp0));	
 	asm volatile("iret");
 	
-	
 	init_vmem();
-	
 	assert(0);
-}
-
-
-void waitdisk(void) {
-	while((in_byte(0x1f7) & 0xc0) != 0x40);
-}
-
-void readsect(void *dst, int offset) {
-	waitdisk();
-
-	out_byte(0x1f2, 1);		// count = 1
-	out_byte(0x1f3, offset);
-	out_byte(0x1f4, offset >> 8);
-	out_byte(0x1f5, offset >> 16);
-	out_byte(0x1f6, (offset >> 24) | 0xe0);
-	out_byte(0x1f7, 0x20);	// cmd 0x20 - read sectors
-
-	waitdisk();
-
-	//insl(0x1f0, dst, SECTSIZE/4);	//read a sector
-	//	this part does the same thing
-	int i;
-	for(i = 0; i < SECTSIZE / 4; i ++) {
-		((int *)dst)[i] = in_long(0x1f0);
-	}
-}
-
-void readseg(unsigned char *pa, int count, int offset) {
-	unsigned char *epa;
-	epa = pa + count;
-	pa -= offset % SECTSIZE;
-	offset = (offset / SECTSIZE) + 1;
-	for(; pa < epa; pa += SECTSIZE, offset ++)
-		readsect(pa, offset);
 }

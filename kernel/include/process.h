@@ -6,3 +6,6 @@ typedef struct PCB {
     void *tf;
 	char kstack[KSTACK_SIZE];
 } PCB;
+
+extern PCB* current;
+extern TSS tss;

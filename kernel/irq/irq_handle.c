@@ -1,11 +1,8 @@
 #include "common.h"
 #include "x86/memory.h"
-//#include "irq.h"
+#include "irq.h"
 #include "process.h"
 
-extern PCB* current;
-void set_tss_esp0(uint32_t);
-extern TSS tss;
 
 #define NR_IRQ_HANDLE 32
 /* There are no more than 16(actually, 3) kinds of hardward interrupts. */
@@ -22,8 +19,7 @@ static int handle_count = 0;
 
 void do_syscall(TrapFrame *);
 
-void 
-add_irq_handle(int irq, void (*func)(void) ) {
+void add_irq_handle(int irq, void (*func)(void) ) {
 	assert(irq < NR_HARD_INTR);
 	assert(handle_count <= NR_IRQ_HANDLE);
 
@@ -56,11 +52,9 @@ void irq_handle(TrapFrame *tf) {
 		}
 	}
 	
-	uint32_t esp0 = (uint32_t)current->tf;
+	uint32_t esp0 = (uint32_t)current->tf;		//free space of TrapFrame
     esp0 += sizeof(struct TrapFrame);
     tss.esp0 = esp0;
-
-
 }
 
 

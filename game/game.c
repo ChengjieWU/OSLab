@@ -294,7 +294,6 @@ int main()
 	printf("We are now in game!\n");
 	init_Game();
 	int key;
-	printf("After init!\n");
 	while (true)
 	{
 		key = readKey();

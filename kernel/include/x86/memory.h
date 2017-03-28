@@ -108,14 +108,6 @@ typedef struct GateDescriptor {
 	uint32_t offset_31_16     : 16;
 } GateDesc;
 
-typedef struct TrapFrame {
-	uint32_t edi, esi, ebp, xxx, ebx, edx, ecx, eax;	// GPRs
-	uint32_t gs, fs, es, ds;							// data segment registers
-	int32_t irq;										// #irq
-	uint32_t error_code;								// error code
-	uint32_t eip, cs, eflags;							// execution state saved by hardware
-	uint32_t esp, ss;									// only uses when DPL = 3
-} TrapFrame;
 
 #endif
 

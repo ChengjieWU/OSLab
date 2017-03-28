@@ -22,7 +22,7 @@
 .globl irq0;     irq0:  pushl $0;  pushl $1000; jmp asm_do_irq
 .globl irq1;     irq1:  pushl $0;  pushl $1001; jmp asm_do_irq
 .globl irq14;   irq14:  pushl $0;  pushl $1014; jmp asm_do_irq
-.globl irq_empty; irq_empty:	pushl $0;  pushl   $-1; jmp asm_do_irq
+.globl irq_empty; irq_empty:pushl $0;  pushl   $-1; jmp asm_do_irq
 
 # the label "current" here is the memory address of variable current
 .extern current
@@ -33,7 +33,7 @@
 # The follow code is *VERY* important for interrupts and exceptions handling.
 # You should make yourself understand it clearly.
 
-#asm_do_irq:
+#asm_do_irq:	will never be used
 #	pushal
 #
 #	pushl %esp		# ???
@@ -46,7 +46,9 @@
 
 
 asm_do_irq:
-	cli
+	cli		#avoid twice interruptions, eflags has been stored and iret will restore it,
+			#at the same time, allow interruptions again
+			
 	pushl %ds
 	pushl %es
 	pushl %fs
@@ -56,14 +58,14 @@ asm_do_irq:
 	movw $SELECTOR_KERNEL(SEG_KERNEL_DATA), %ax
 	movw %ax, %ds
 	movw %ax, %es
+	movw %ax, %gs
+	movw %ax, %fs
 
 	pushl %esp
 	call irq_handle
 	
-	movl current,%eax
+	movl current, %eax
     movl (%eax),%esp
-	
-#addl $4, %esp # when you finish this task, this instruction should be removed
 
 	popal
 	popl %gs
@@ -73,4 +75,3 @@ asm_do_irq:
 	addl $8, %esp
 	
 	iret
-

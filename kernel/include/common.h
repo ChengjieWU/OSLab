@@ -3,7 +3,6 @@
 
 //#define IA32_PAGE
 
-
 #include "assert.h"
 #include "types.h"
 
