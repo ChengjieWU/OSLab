@@ -1,6 +1,7 @@
-#ifndef __VIDEO_COMMON_H__
-#define __VIDEO_COMMON_H__
+#ifndef __VIDEO_SETTING_H__
+#define __VIDEO_SETTING_H__
 
+#include "types.h"
 
 #define SCR_WIDTH		800
 #define SCR_HEIGHT		600

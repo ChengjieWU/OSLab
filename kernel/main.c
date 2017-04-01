@@ -11,6 +11,7 @@
 #define USER_STACK 0x6000000 //(96MB)
 
 #define GAME_OFFSET_IN_DISK (10 * 1024 * 1024)
+
 void readseg(unsigned char*,int,int);
 
 
@@ -27,7 +28,7 @@ void init_cond();
 
 int main()
 {
-#ifdef IA32_PAGE
+#ifdef IA32_PAGE		//page hasn't been enabled
 	init_page();
 	/* After paging is enabled, transform %esp to virtual address. */
 	asm volatile("addl %0, %%esp" : : "i"(KOFFSET));
@@ -51,9 +52,8 @@ void init_cond()
 	
 	init_vmem_addr();
 	init_vmem();
-	sti();
 	printk("Here we go!\n");
-	
+		
 	struct Elf *elf;
 	struct Proghdr *ph, *eph;
 	unsigned char *pa, *i;
@@ -70,24 +70,31 @@ void init_cond()
 		readseg(pa, ph->p_filesz, GAME_OFFSET_IN_DISK + ph->p_offset);
 		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
 	}
+	sti();
 	
 	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
 	
-	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));
-	asm volatile("popl %%ds" : : : "memory");
-	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));
-	asm volatile("popl %%es" : : : "memory");
-	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));
-	asm volatile("popl %%fs" : : : "memory");
-	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));
-	asm volatile("popl %%gs" : : : "memory");
-	asm volatile("pushl %0" : : "r"(SELECTOR_USER(4)));	//push user's ss
+	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
+	asm volatile("movl %%esp, %0" : "=r"(tss.esp0));
+	
+	asm volatile("movl %0, %%eax" : : "r"(elf->e_entry));
+	
+	asm volatile("pushl %0" : : "i"(SELECTOR_USER(4)));	//change to user's segments
+	asm volatile("popl %ds");
+	asm volatile("pushl %0" : : "i"(SELECTOR_USER(4)));
+	asm volatile("popl %es");
+	asm volatile("pushl %0" : : "i"(SELECTOR_USER(4)));
+	asm volatile("popl %fs");
+	asm volatile("pushl %0" : : "i"(SELECTOR_USER(4)));
+	asm volatile("popl %gs");
+	
+	asm volatile("pushl %0" : : "i"(SELECTOR_USER(4)));	//push user's ss
 	asm volatile("pushl %0" : : "i"(USER_STACK));		//push user's esp
 	asm volatile("pushfl");								//push eflags
-	asm volatile("pushl %0" : : "r"(SELECTOR_USER(3)));	//push user's cs
-	asm volatile("pushl %0" : : "r"(elf->e_entry));		//push user's eip
-	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
-	asm volatile("movl %%esp, %0" : "=r"(tss.esp0));	
+	asm volatile("pushl %0" : : "i"(SELECTOR_USER(3)));	//push user's cs
+	asm volatile("pushl %eax");							//push user's eip
+	
+	/* Here we go! */
 	asm volatile("iret");
 	
 	init_vmem();
