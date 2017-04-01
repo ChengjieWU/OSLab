@@ -2,75 +2,7 @@
 #include "memory.h"
 #include "string.h"
 
-/* This source file involves some hardware details. Please refer to 
- *  _ ____   ___    __    __  __                         _ 
- * (_)___ \ / _ \  / /   |  \/  |                       | |
- *  _  __) | (_) |/ /_   | \  / | __ _ _ __  _   _  __ _| |
- * | ||__ < > _ <| '_ \  | |\/| |/ _` | '_ \| | | |/ _` | |
- * | |___) | (_) | (_) | | |  | | (_| | | | | |_| | (_| | |
- * |_|____/ \___/ \___/  |_|  |_|\__,_|_| |_|\__,_|\__,_|_|
- */                                                               
-
-/* These data structures are shared by all kernel threads. */
-
 #ifdef IA32_PAGE
-
-static CR3 kcr3;											// kernel CR3
-static PDE kpdir[NR_PDE] align_to_page;						// kernel page directory
-static PTE kptable[PHY_MEM / PAGE_SIZE] align_to_page;		// kernel page tables
-
-/* You may use these interfaces in the future */
-inline CR3* get_kcr3() {
-	return &kcr3;
-}
-
-inline PDE* get_kpdir() {
-	return kpdir;
-}
-
-inline PTE* get_kptable() {
-	return kptable;
-}
-
-/* Build a page table for the kernel */
-void
-init_page(void) {
-	CR0 cr0;
-	CR3 cr3;
-	PDE *pdir = (PDE *)va_to_pa(kpdir);
-	PTE *ptable = (PTE *)va_to_pa(kptable);
-	uint32_t pdir_idx, ptable_idx, pframe_idx;
-
-
-	for (pdir_idx = 0; pdir_idx < NR_PDE; pdir_idx ++) {
-		make_invalid_pde(&pdir[pdir_idx]);
-	}
-
-	pframe_idx = 0;
-	for (pdir_idx = 0; pdir_idx < PHY_MEM / PD_SIZE; pdir_idx ++) {
-		make_pde(&pdir[pdir_idx], ptable);
-		make_pde(&pdir[pdir_idx + KOFFSET / PD_SIZE], ptable);
-		for (ptable_idx = 0; ptable_idx < NR_PTE; ptable_idx ++) {
-			make_pte(ptable, (void*)(pframe_idx << 12));
-			pframe_idx ++;
-			ptable ++;
-		}
-	}
-
-	/* make CR3 to be the entry of page directory */
-	cr3.val = 0;
-	cr3.page_directory_base = ((uint32_t)pdir) >> 12;
-	write_cr3(&cr3);
-
-	/* set PG bit in CR0 to enable paging */
-	cr0.val = read_cr0();
-	cr0.paging = 1;
-	write_cr0(&cr0);
-
-	/* Now we can access global variables! 
-	 * Store CR3 in the global variable for future use. */
-	kcr3.val = cr3.val;
-}
 
 #endif
 

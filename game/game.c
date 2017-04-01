@@ -59,6 +59,7 @@ const int board_y = boardTop;
 bool is_start;
 int v_x, v_y;
 int state;
+int roundNum = 0;
 
 enum {NOTDECIDED, WIN, LOSE};
 enum {NORMAL, QUIT, PAUSE};
@@ -102,8 +103,16 @@ int main()
 			int ret = round();
 			if (ret == QUIT) break;
 			else if (ret == PAUSE) continue;
-			if (state == WIN) fullVideo(gImage_SUCCESS);
-			else if (state == LOSE) fullVideo(gImage_FAILURE);
+			if (state == WIN) 
+			{
+				fullVideo(gImage_SUCCESS);
+				printf("Round %d: You WIN!\n", roundNum++);
+			}
+			else if (state == LOSE) 
+			{
+				fullVideo(gImage_FAILURE);
+				printf("Round %d: You LOSE!\n", roundNum++);
+			}
 			else return -1;
 		}
 	}

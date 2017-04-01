@@ -97,6 +97,5 @@ void init_cond()
 	/* Here we go! */
 	asm volatile("iret");
 	
-	init_vmem();
-	assert(0);
+	panic("will not get here!");
 }
