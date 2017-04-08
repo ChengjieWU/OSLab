@@ -8,7 +8,6 @@
 #include "keyboard.h"
 #include "video.h"
 
-
 /* include data */
 #include "picture.h"
 
@@ -37,7 +36,7 @@
 
 #define ballspeedx 1
 #define ballspeedy 1
-#define speedSwitch 4
+#define speedSwitch 2
 #define flashSwitch frequency(24)
 #define step 30
 
@@ -67,8 +66,6 @@ enum {NORMAL, QUIT, PAUSE};
 /*--------------------------------------------------------------------------*/
 
 /* video output functions */
-void draw_rectangular(int x, int y, int p, int q, union Pixels c);
-void remove_rectangular(int x, int y, int p, int q);
 void draw_ball();
 void remove_ball();
 void draw_board();
@@ -181,25 +178,7 @@ int round()
 
 /*--------------------------------------------------------------------------*/
 
-void draw_rectangular(int x, int y, int p, int q, union Pixels c)
-{
-	uint8_t buffer[groudDepth] = {c.blue, c.green, c.red};
-	int i, j;
-	for (i = y; i < q; i++)
-		for (j = x; j < p; j++)
-			loadVideo(buffer, (i * groudWidth + j) * groudDepth, groudDepth);
-}
 
-void remove_rectangular(int x, int y, int p, int q)
-{
-	int size = (p - x) * groudDepth;
-	int i;
-	for (i = y; i < q; i++)
-	{
-		int position = (i * groudWidth + x) * groudDepth;
-		loadVideo(gImage_Universe + position, position, size);
-	}
-}
 
 void draw_ball() 
 {
@@ -210,7 +189,7 @@ void draw_ball()
 
 void remove_ball() 
 {
-	remove_rectangular(ball_x - ballRadius, ball_y - ballRadius, ball_x + ballRadius, ball_y + ballRadius);
+	remove_rectangular(ball_x - ballRadius, ball_y - ballRadius, ball_x + ballRadius, ball_y + ballRadius, gImage_Universe);
 }
 
 void draw_board()
@@ -222,7 +201,7 @@ void draw_board()
 
 void remove_board()
 {
-	remove_rectangular(board_x - boardHalfWidth, board_y - boardHalfHeight, board_x + boardHalfWidth, board_y + boardHalfHeight);
+	remove_rectangular(board_x - boardHalfWidth, board_y - boardHalfHeight, board_x + boardHalfWidth, board_y + boardHalfHeight, gImage_Universe);
 }
 
 void remove_a_brick(int i, int j)
@@ -231,7 +210,7 @@ void remove_a_brick(int i, int j)
 	int sy = brickTop - brickRow * brickHalfHeight - (brickRow - 1) * brickHalfSpace;
 	int x = sx + j * 2 * (brickHalfWidth+brickHalfSpace);
 	int y = sy + i * 2 * (brickHalfHeight+brickHalfSpace);
-	remove_rectangular(x, y, x + 2 * brickHalfWidth, y + 2 * brickHalfHeight);
+	remove_rectangular(x, y, x + 2 * brickHalfWidth, y + 2 * brickHalfHeight, gImage_Universe);
 }
 
 void draw_brick()
