@@ -8,10 +8,11 @@ uint8_t *vmem;
 void init_vmem_addr() {
 	struct ModeInfoBlock *MIB = (struct ModeInfoBlock *)(0x7e00);
 	vmem = (uint8_t *)MIB->physbase;
+	/* Note: MIB->physbase = fd000000 */
 }
 
 void init_vmem() {
-	memset(vmem, 0, SCR_SIZE);
+	memset(vmem, 0xff, SCR_SIZE);
 }
 
 void load_vmem(const uint8_t *buffer, int position, int size) {

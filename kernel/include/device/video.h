@@ -3,13 +3,13 @@
 
 #include "common.h"
 
+#define VMEM_ADDR		0xFD000000
 #define SCR_WIDTH		800
 #define SCR_HEIGHT		600
 #define SCR_DEPTH		3
 #define SCR_WIDTH_SIZE	(SCR_WIDTH * SCR_DEPTH)
 #define SCR_SIZE		((SCR_WIDTH) * (SCR_HEIGHT) * (SCR_DEPTH))
-//#define VMEM_ADDR		0xFD000000
-//uint32_t VMEM_ADDR;
+
 
 union Pixels {
 	struct {
@@ -31,6 +31,9 @@ extern uint8_t *vmem;
 
 void init_vmem_addr();
 void init_vmem();
+void init_vmem_space();
+void vmem_writing_test();
+void vmem_reading_test();
 void load_vmem(const uint8_t*, int, int);
 void fullScreen(const unsigned char*);
 

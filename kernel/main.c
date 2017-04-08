@@ -7,6 +7,8 @@
 #include "device/timer.h"
 #include "process.h"
 
+#include "memory.h"
+
 /* Kernel stack starts at 0x8000000 (end of phy-address), which is set in boot/start.S */
 #define USER_STACK 0x6000000 //(96MB)
 
@@ -14,6 +16,7 @@
 
 void readseg(unsigned char*,int,int);
 
+extern const unsigned char gImage_Universe[1440000];
 
 #ifdef IA32_PAGE
 void init_page();
@@ -23,16 +26,22 @@ void init_idt();
 void init_i8259();
 void init_serial();
 void add_irq_handle(int,void (*)(void));
-void init_cond();
 
+void init_cond();
+void here_we_go();
+void printk_test();
 
 int main()
 {
-#ifdef IA32_PAGE		//page hasn't been enabled
+#ifdef IA32_PAGE
 	init_page();
 	/* After paging is enabled, transform %esp to virtual address. */
-	asm volatile("addl %0, %%esp" : : "i"(KOFFSET));
-#endif
+	//asm volatile("addl %0, %%esp" : : "i"(KOFFSET));
+	asm volatile (" addl %0, %%esp\n\t\
+					jmp *%1": : "r"(KOFFSET), "r"(init_cond));
+					
+	assert(0);
+#endif	
 	/* Jump to init_cond() to continue initialization. */
 	asm volatile("jmp *%0" : : "r"(init_cond));
 
@@ -50,10 +59,28 @@ void init_cond()
 	add_irq_handle(1, keyboard_event);
 	init_timer();
 	
+	/* Printk test */
+	printk_test();
+	
+	/* Create and test video memory write and read */
 	init_vmem_addr();
+	init_vmem_space();
 	init_vmem();
+	vmem_writing_test();
+	vmem_reading_test();
+	init_vmem();
+	
 	printk("Here we go!\n");
-		
+	
+	
+	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
+	//here_we_go();
+
+	panic("should not get here!");
+}
+
+void here_we_go()
+{
 	struct Elf *elf;
 	struct Proghdr *ph, *eph;
 	unsigned char *pa, *i;
@@ -70,11 +97,9 @@ void init_cond()
 		readseg(pa, ph->p_filesz, GAME_OFFSET_IN_DISK + ph->p_offset);
 		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
 	}
-	sti();
-	
-	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
 	
 	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
+	sti();
 	asm volatile("movl %%esp, %0" : "=r"(tss.esp0));
 	
 	asm volatile("movl %0, %%eax" : : "r"(elf->e_entry));
@@ -96,6 +121,32 @@ void init_cond()
 	
 	/* Here we go! */
 	asm volatile("iret");
-	
-	panic("will not get here!");
+}
+
+void printk_test()
+{
+	printk("\n");
+	printk("Printk test begin...\n");
+	printk("the answer should be:\n");
+	printk("#######################################################\n");
+	printk("Hello, welcome to OSlab! I'm the body of the game. ");
+	printk("Bootblock loads me to the memory position of 0x100000, and Makefile also tells me that I'm at the location of 0x100000. ");
+	printk("~!@#$^&*()_+`1234567890-=...... ");
+	printk("Now I will test your printk: ");
+	printk("1 + 1 = 2, 123 * 456 = 56088\n0, -1, -2147483648, -1412505855, -32768, 102030\n0, ffffffff, 80000000, abcdef01, ffff8000, 18e8e\n");
+	printk("#######################################################\n");
+	printk("your answer:\n");
+	printk("=======================================================\n");
+	printk("%s %s%scome %co%s", "Hello,", "", "wel", 't', " ");
+	printk("%c%c%c%c%c! ", 'O', 'S', 'l', 'a', 'b');
+	printk("I'm the %s of %s. %s 0x%x, %s 0x%x. ", "body", "the game", "Bootblock loads me to the memory position of",
+    0x100000, "and Makefile also tells me that I'm at the location of", 0x100000);
+	printk("~!@#$^&*()_+`1234567890-=...... ");
+	printk("Now I will test your printk: ");
+	printk("%d + %d = %d, %d * %d = %d\n", 1, 1, 1 + 1, 123, 456, 123 * 456);
+	printk("%d, %d, %d, %d, %d, %d\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
+	printk("%x, %x, %x, %x, %x, %x\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
+	printk("=======================================================\n");
+	printk("Test end!!! Good luck!!!\n");
+	printk("\n");
 }
