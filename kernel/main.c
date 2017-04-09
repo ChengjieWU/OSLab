@@ -21,6 +21,7 @@ extern const unsigned char gImage_Universe[1440000];
 #ifdef IA32_PAGE
 void init_page();
 void init_mm();
+void temp_function();
 #endif
 void init_segment();
 void init_idt();
@@ -72,7 +73,10 @@ void init_cond()
 	vmem_reading_test();
 #endif
 	init_vmem();
+	
 	init_mm();
+	
+	temp_function();
 	
 	printk("Here we go!\n");
 	

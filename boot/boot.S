@@ -66,7 +66,8 @@ start32:
 
 	# 设置栈位置。栈从此没有切换过，请注意栈的大小！
 	movl	$0, %ebp
-	movl    $(128 << 20), %esp     # %ESP = $0x8000000
+	#movl    $(128 << 20), %esp     # %ESP = $0x8000000
+	movl	$0x1000000, %esp	# %ESP locates at 16MB, which is the biggest size of kernel.
 	call    bootmain          # jump to C code
 
 # GDT

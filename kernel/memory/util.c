@@ -31,6 +31,13 @@ void make_pte(PTE *p, void *addr)
 	p->user_supervisor = 1;
 }
 
+void make_pte_mask(PTE *p, void *addr, uint32_t mask)
+{
+	p->val = 0;
+	p->val = mask;
+	p->page_frame = ((uint32_t)addr) >> 12;
+}
+
 inline uint32_t get_pte_ind(uint32_t n) {
     return ((n & 0x3ff000)>>12); // 0000 0000 0011 1111 1111 0000 0000 0000
 }

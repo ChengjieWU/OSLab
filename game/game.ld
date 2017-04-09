@@ -8,14 +8,17 @@ ENTRY(main)  /* 入口函数，你可以不定义成 main，只要是代码中�
 
 SECTIONS
 {
+	/* Paging has been implemented, and the virtual address can be set to 0x8048000. */
 	/**
 	 * 可执行程序的地址空间从 32MB 往上开始
 	 */
-	. = 0x2000000;
+	/*. = 0x2000000;*/
+	. = 0x8048000;
 
 	PROVIDE(start = .);
 
-	.text : AT(0x2000000) {  /* AT 指定物理地址 */
+	/*.text : AT(0x2000000) {   AT 指定物理地址 */
+	.text : AT(0x8048000) {
 		*(.text .text.*)
 	}
 
