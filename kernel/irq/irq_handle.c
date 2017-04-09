@@ -17,6 +17,7 @@ static struct IRQ_t handle_pool[NR_IRQ_HANDLE];
 static struct IRQ_t *handles[NR_HARD_INTR]; // handles is an array of lists
 static int handle_count = 0;
 
+void schedule();
 void do_syscall(TrapFrame *);
 
 void add_irq_handle(int irq, void (*func)(void) ) {
@@ -41,7 +42,7 @@ void irq_handle(TrapFrame *tf) {
 		do_syscall(tf);
 	} else if(irq < 1000) {
 		if (irq == 14) {
-			panic("Unexpected exception #%d at eip = %x", irq, tf->eip);
+			panic("Unexpected exception #%d at eip = %x\nPage Fault!", irq, tf->eip);
 		}
 		panic("Unexpected exception #%d at eip = %x", irq, tf->eip);
 	} else if (irq >= 1000) {
@@ -55,9 +56,7 @@ void irq_handle(TrapFrame *tf) {
 		}
 	}
 	
-	uint32_t esp0 = (uint32_t)current->tf;		//free space of TrapFrame
-    esp0 += sizeof(struct TrapFrame);
-    tss.esp0 = esp0;
+	schedule();
 }
 
 

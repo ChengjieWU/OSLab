@@ -46,7 +46,7 @@
 
 
 asm_do_irq:
-	cli		#avoid twice interruptions, eflags has been stored and iret will restore it,
+	cli		#avoid nested interruptions, eflags has been stored and iret will restore it,
 			#at the same time, allow interruptions again
 			
 	pushl %ds

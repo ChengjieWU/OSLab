@@ -34,9 +34,11 @@
 #define brickTop 160
 #define boardTop 540
 
-#define ballspeedx 1
-#define ballspeedy 1
-#define speedSwitch 2
+#define ballspeedx 8
+#define ballspeedy 8
+#define minimumSpeed 6
+#define maximumSpeed 12
+#define speedSwitch 30
 #define flashSwitch frequency(24)
 #define step 30
 
@@ -293,13 +295,14 @@ bool collide_board()
 		if (gap > total/3)
 		{
 			int safter = v_x - symbolInteger(board_x - ball_x);
-			if (gap < 2*total/3 && abs(safter) > 5) v_x = safter;
+			if (gap < 2*total/3 && abs(safter) >= minimumSpeed && abs(safter) <= maximumSpeed) v_x = safter;
 			else 
 			{	
 				safter = v_x - 2 * symbolInteger(board_x - ball_x);
-				if (gap >= 2*total/3 && abs(safter) > 5) v_x = safter;
+				if (gap >= 2*total/3 && abs(safter) >= minimumSpeed && abs(safter) <= maximumSpeed) v_x = safter;
 			}
 		}
+		//printf("%d\n", v_x);
 		return true;
 	}
 	else return false;

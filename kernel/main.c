@@ -12,7 +12,7 @@
 /* Kernel stack starts at 0x8000000 (end of phy-address), which is set in boot/start.S */
 #define USER_STACK 0x6000000 //(96MB)
 
-#define GAME_OFFSET_IN_DISK (10 * 1024 * 1024)
+#define GAME_OFFSET_IN_DISK KMEM
 
 void readseg(unsigned char*,int,int);
 
@@ -20,6 +20,7 @@ extern const unsigned char gImage_Universe[1440000];
 
 #ifdef IA32_PAGE
 void init_page();
+void init_mm();
 #endif
 void init_segment();
 void init_idt();
@@ -64,17 +65,20 @@ void init_cond()
 	
 	/* Create and test video memory write and read */
 	init_vmem_addr();
+#ifdef IA32_PAGE
 	init_vmem_space();
 	init_vmem();
 	vmem_writing_test();
 	vmem_reading_test();
+#endif
 	init_vmem();
+	init_mm();
 	
 	printk("Here we go!\n");
 	
 	
 	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
-	//here_we_go();
+	here_we_go();
 
 	panic("should not get here!");
 }

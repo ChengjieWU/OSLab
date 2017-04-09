@@ -11,7 +11,7 @@ void init_vmem_space()
 	/* Since SCR_SIZE < PT_SIZE, so it is in one pde term. I simplify it here. ##### */
 	PDE* kpdir_t = get_kpdir();
 	PTE* kptable_t = get_kptable();
-	PTE* vptable = &kptable_t[PHY_MEM / PAGE_SIZE];
+	PTE* vptable = &kptable_t[NR_PAGE];
 	make_pde(&kpdir_t[(VMEM_ADDR >> 22) & 0x3ff], va_to_pa(vptable));
 	uint32_t ptable_idx;
 	for (ptable_idx = 0; ptable_idx < NR_PTE; ptable_idx++)

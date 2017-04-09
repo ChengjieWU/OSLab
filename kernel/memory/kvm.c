@@ -5,9 +5,10 @@
 #include "video.h"
 
 #ifdef IA32_PAGE
+
 static CR3 kcr3;												// kernel CR3
 static PDE kpdir[NR_PDE] align_to_page;							// kernel page directory
-static PTE kptable[PHY_MEM / PAGE_SIZE + NR_PTE] align_to_page;	// kernel page tables
+static PTE kptable[NR_PAGE + NR_PTE] align_to_page;				// kernel page tables
 																// Note: the extra PTE is for video mapping!
 
 /* interfaces */
