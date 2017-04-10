@@ -166,6 +166,14 @@ int page_insert(PDE *pgdir, page_info* pp, void *va, int perm)
 	}
 }
 
+uint32_t request_for_page()
+{
+	page_info* pp = page_alloc(ALLOC_ZERO);
+	if (pp == NULL) panic("No free pages!\n");
+	pp->cited++;
+	physaddr_t phy_addr = page2pa(pp);
+	return (uint32_t)pa_to_va(phy_addr);
+}
 
 PDE* init_updir()
 {
@@ -180,7 +188,11 @@ PDE* init_updir()
 	/* Map kernel space to user space. */
 	/* IMPORTANT NOTE: PTE must be set to kernel mode to enable page protection! */
 	boot_map_region(updir, KOFFSET, PHY_MEM, 0, PTE_W);
+	
+	/* ###### Since SCR_SIZE <= PD_SIZE, so it is in one pde term. I simplify it here. ###### */
+	if (SCR_SIZE > PD_SIZE) panic("The situation needs handling!\n");
 	boot_map_region(updir, VMEM_ADDR, PD_SIZE, VMEM_ADDR, PTE_W);
+	
 	
 	uint32_t aa = 0x8048000;
 	int i = 0;
@@ -191,4 +203,3 @@ PDE* init_updir()
 
 	return updir;
 }
-

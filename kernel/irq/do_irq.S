@@ -24,7 +24,7 @@
 .globl irq14;   irq14:  pushl $0;  pushl $1014; jmp asm_do_irq
 .globl irq_empty; irq_empty:pushl $0;  pushl   $-1; jmp asm_do_irq
 
-# the label "current" here is the memory address of variable current
+# the label "current" here is the memory 'address'!! of variable current
 .extern current
 
 .globl asm_do_irq

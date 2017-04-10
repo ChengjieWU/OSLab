@@ -6,19 +6,19 @@
 #define PCB_NUM 64					/* The maximum number of PCB terms is 64. */
 
 enum STATE {
-    TASK_EMPTY,
-    TASK_RUNNING,
-    TASK_READY,
-    TASK_BLOCKED,
-    TASK_DEAD,
+    PROCESS_EMPTY,
+    PROCESS_RUNNING,
+    PROCESS_READY,
+    PROCESS_BLOCKED,
+    PROCESS_DEAD,
 };
 
 
 typedef struct PCB {
-	void* tf;
+	void* tf;		/* ###### Due to unknown reason, this term must be the first! ###### */
 	int id;
     enum STATE state;
-    unsigned char kernelStack[KERNEL_STACK_SIZE];
+    uint8_t* kernelStackMax; /* Allocate a page for kernel stack. */
 	struct PCB* next;
 	CR3 cr3;
 	pid_t pid;
@@ -26,6 +26,7 @@ typedef struct PCB {
 	PDE* pgdir;
 } PCB;
 
+void init_PCB();
 
 
 extern PCB idle;

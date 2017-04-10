@@ -5,6 +5,7 @@
 #include "string.h"
 #include "device/keyboard.h"
 #include "device/timer.h"
+
 #include "process.h"
 
 #include "memory.h"
@@ -18,6 +19,7 @@ void readseg(unsigned char*,int,int);
 
 extern const unsigned char gImage_Universe[1440000];
 
+PCB* go_schedule();
 #ifdef IA32_PAGE
 void init_page();
 void init_mm();
@@ -76,6 +78,7 @@ void init_cond()
 	
 	init_mm();
 	
+	init_PCB();
 	
 	printk("Here we go!\n");
 	
@@ -88,7 +91,11 @@ void init_cond()
 
 void here_we_go()
 {
-	PDE* updir = init_updir();
+	PCB* First_Proc = go_schedule();
+	PDE* updir = First_Proc->pgdir;
+	current = First_Proc;
+	tss.esp0 = (uint32_t)current->tf;
+	
 	CR3 cr3;
 	cr3.val = 0;
 	cr3.page_directory_base = ((uint32_t)va_to_pa(updir)) >> 12;
@@ -114,7 +121,7 @@ void here_we_go()
 	
 	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
 	sti();
-	asm volatile("movl %%esp, %0" : "=r"(tss.esp0));
+	//asm volatile("movl %%esp, %0" : "=r"(tss.esp0));
 	
 	asm volatile("movl %0, %%eax" : : "r"(elf->e_entry));
 	

@@ -8,7 +8,8 @@
 
 void init_vmem_space()
 {
-	/* Since SCR_SIZE < PT_SIZE, so it is in one pde term. I simplify it here. ##### */
+	/* ###### Since SCR_SIZE <= PD_SIZE, so it is in one pde term. I simplify it here. ###### */
+	if (SCR_SIZE > PD_SIZE) panic("The situation needs handling!\n");
 	PDE* kpdir_t = get_kpdir();
 	PTE* kptable_t = get_kptable();
 	PTE* vptable = &kptable_t[NR_PAGE];
