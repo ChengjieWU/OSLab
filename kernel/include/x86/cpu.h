@@ -50,7 +50,15 @@ write_cr0(CR0 *cr0) {
 	asm volatile("movl %0, %%cr0" : : "r"(cr0->val));
 }
 
-/* write CR3, notice that CR3 are never read in Nanos */
+/* read CR2, notice that CR2 is never written */
+static inline uint32_t
+read_cr2() {
+	uint32_t val;
+	asm volatile("movl %%cr2, %0" : "=r"(val));
+	return val;
+}
+
+/* write CR3, notice that CR3 is never read */
 static inline void
 write_cr3(CR3 *cr3) {
 	asm volatile("movl %0, %%cr3" : : "r"(cr3->val));

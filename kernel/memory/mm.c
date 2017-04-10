@@ -1,7 +1,10 @@
 #include "common.h"
 #include "string.h"
+
 #include "memory.h"
 #include "mmu.h"
+#include "irq.h"
+#include "process.h"
 
 #include "device/video.h"
 
@@ -16,14 +19,9 @@ page_info page_mm[NR_PAGE];
 page_info* page_free_list;
 
 
-///////////////////////////////////////////////////////
+#define ALLOC_ZERO 1
 
-enum {
-	// For page_alloc, zero the returned physical page.
-	ALLOC_ZERO = 1<<0,
-};
-
-static inline physaddr_t page2pa(struct page_info *pp)
+static inline physaddr_t page2pa(struct page_info *pp) 
 {
 	return pp->id << PGSHIFT;
 }
@@ -34,9 +32,6 @@ static inline page_info* pa2page(physaddr_t pa)
 	if (PGNUM(pa) >= NR_PAGE) panic("Invalid pa!\n");
 	return &page_mm[PGNUM(pa)];
 }
-
-///////////////////////////////////////////////////////
-
 
 
 void init_mm()
@@ -59,7 +54,7 @@ void init_mm()
 	}
 }
 
-page_info* page_alloc(int alloc_flags)
+static page_info* page_alloc(int alloc_flags)
 {
 	if (page_free_list == NULL) return NULL;
 	page_info* p = page_free_list;
@@ -68,26 +63,27 @@ page_info* page_alloc(int alloc_flags)
 	p->next = NULL;
 	if (alloc_flags & ALLOC_ZERO)
 	{
-		physaddr_t pa = page2pa(p);
-		memset((uint8_t*)pa, 0, PAGE_SIZE);
+		physaddr_t phy_addr = page2pa(p);
+		/* Always use va after paging! Cause user programs cannot access pa! */
+		memset((uint8_t*)pa_to_va(phy_addr), 0, PAGE_SIZE);
 	}
 	return p;
 }
 
-void page_free(page_info* pp)
+/*static void page_free(page_info* pp)
 {
 	pp->free = true;
 	pp->next = page_free_list;
 	page_free_list = pp;
 }
 
-void page_dec_cited(page_info* pp)
+static void page_dec_cited(page_info* pp)
 {
 	if (--pp->cited == 0)
 		page_free(pp);
-}
+}*/
 
-PTE* pgdir_walk(PDE* pgdir, const void *va, bool create)
+static PTE* pgdir_walk(PDE* pgdir, const void *va, bool create)
 {
 	if (pgdir[PDX(va)].present == 0)
 	{
@@ -111,7 +107,7 @@ PTE* pgdir_walk(PDE* pgdir, const void *va, bool create)
 }
 
 /* Used only for map, don't allocate physical frame. */
-void boot_map_region(PDE *pgdir, uintptr_t va, unsigned long size, physaddr_t pa, int perm)
+static void boot_map_region(PDE *pgdir, uintptr_t va, unsigned long size, physaddr_t pa, int perm)
 {
 	if (size % PAGE_SIZE != 0) panic("size is not the multiple of PAGE_SIZE!\n");
 	if (va % PAGE_SIZE != 0) panic("va is not the multiple of PAGE_SIZE!\n");
@@ -153,7 +149,7 @@ void boot_map_region(PDE *pgdir, uintptr_t va, unsigned long size, physaddr_t pa
 //
 
 /* This is a currently simplified version. */
-int page_insert(PDE *pgdir, page_info* pp, void *va, int perm)
+static int page_insert(PDE *pgdir, page_info* pp, void *va, int perm)
 {
 	PTE* pte = pgdir_walk(pgdir, (const void*)va, true);
 	if (pte->present == 1) return -1;
@@ -193,13 +189,49 @@ PDE* init_updir()
 	if (SCR_SIZE > PD_SIZE) panic("The situation needs handling!\n");
 	boot_map_region(updir, VMEM_ADDR, PD_SIZE, VMEM_ADDR, PTE_W);
 	
-	
+	/* This manually version to load all pages will never be used. */
+	/*
 	uint32_t aa = 0x8048000;
 	int i = 0;
 	for (; i < 4096; i++)
 	{
 		page_insert(updir, page_alloc(ALLOC_ZERO), (void*)(aa + i * PAGE_SIZE), PTE_U | PTE_W);
-	}
+	}*/
 
 	return updir;
+}
+
+
+void page_fault_handler(TrapFrame* tf)
+{
+	if (tf->error_code & FEC_PR) panic("Page-level protection violation at eip = %x!\n", tf->eip);
+	if (tf->error_code & FEC_U) 
+	{
+		if (tf->error_code & FEC_WR)
+		{
+			uintptr_t address = read_cr2();
+			/* The virtual space for user programs is 0x0 - 0xbfffffff, right below kernel, 3GB in total. */
+			if (address >= KOFFSET) panic("User_mode writing page fault at eip = %x!\n", tf->eip);
+			page_insert(current->pgdir, page_alloc(ALLOC_ZERO), (void*)address, PTE_U | PTE_W);
+		}
+		else
+		{
+			panic("User_mode reading page fault at eip = %x!\n", tf->eip);
+		}
+	}
+	else 
+	{
+		if (tf->error_code & FEC_WR)
+		{
+			uintptr_t address = read_cr2();
+			/* This should only be used when loading user programs. */
+			/* The virtual space for user programs is 0x0 - 0xbfffffff, right below kernel, 3GB in total. */
+			if (address >= KOFFSET) panic("User_mode page fault at eip = %x!\n", tf->eip);
+			page_insert(current->pgdir, page_alloc(ALLOC_ZERO), (void*)address, PTE_U | PTE_W);
+		}
+		else
+		{
+			panic("page fault at eip = %x!\n", tf->eip);
+		}
+	}	
 }

@@ -87,7 +87,12 @@ void init_Game();
 
 /*--------------------------------------------------------------------------*/
 
-int main()
+/* We should not use function type int here. If so, the function will try to read value in 0x4(%esp) first. */
+/* Since it is loaded by the kernel, %esp = 0xc0000000 at the beginning, and this is the max value. */
+/* And when it is first executed, physical frames for user stack hasn't been allocated. */
+/* So it will lead to page-protection fault or user-read-page-fault. We should use void. */
+/* Compiler won't allow main to be void, so we cannot use main. Instead, we use game_main. */
+void game_main(void)
 {
 	printf("We are now in game!\n");
 	init_Game();
@@ -112,10 +117,9 @@ int main()
 				fullVideo(gImage_FAILURE);
 				printf("Round %d: You LOSE!\n", roundNum++);
 			}
-			else return -1;
+			//else return -1;
 		}
 	}
-	return 0;
 }
 
 /*--------------------------------------------------------------------------*/

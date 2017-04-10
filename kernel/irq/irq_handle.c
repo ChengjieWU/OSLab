@@ -19,6 +19,7 @@ static int handle_count = 0;
 
 void schedule();
 void do_syscall(TrapFrame *);
+void page_fault_handler(TrapFrame *);
 
 void add_irq_handle(int irq, void (*func)(void) ) {
 	assert(irq < NR_HARD_INTR);
@@ -42,9 +43,9 @@ void irq_handle(TrapFrame *tf) {
 		do_syscall(tf);
 	} else if(irq < 1000) {
 		if (irq == 14) {
-			panic("Unexpected exception #%d at eip = %x\nPage Fault!", irq, tf->eip);
+			page_fault_handler(tf);
 		}
-		panic("Unexpected exception #%d at eip = %x", irq, tf->eip);
+		//panic("Unexpected exception #%d at eip = %x\nShould not get here!", irq, tf->eip);
 	} else if (irq >= 1000) {
 		int irq_id = irq - 1000;
 		assert(irq_id < NR_HARD_INTR);

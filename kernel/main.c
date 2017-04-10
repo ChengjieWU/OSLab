@@ -10,8 +10,8 @@
 
 #include "memory.h"
 
-/* Kernel stack starts at 0x8000000 (end of phy-address), which is set in boot/start.S */
-#define USER_STACK 0x804f000 //(96MB)
+/* Kernel stack starts at 0x1000000 (NOT end of phy-address), which is set in boot/start.S */
+#define USER_STACK 0xc0000000 //(96MB)
 
 #define GAME_OFFSET_IN_DISK KMEM
 
@@ -119,8 +119,10 @@ void here_we_go()
 		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
 	}
 	
-	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
+	
 	sti();
+	/* Now we have PCB! Kernel stack is stored in PCB, and allocated by mm, This will never use! */
+	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
 	//asm volatile("movl %%esp, %0" : "=r"(tss.esp0));
 	
 	asm volatile("movl %0, %%eax" : : "r"(elf->e_entry));
