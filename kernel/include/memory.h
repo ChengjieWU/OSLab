@@ -16,6 +16,9 @@ void make_invalid_pde(PDE *);
 void make_invalid_pte(PTE *);
 void make_pde(PDE *, void *);
 void make_pte(PTE *, void *);
+void make_pde_kernel(PDE *, void *);
+void make_pte_kernel(PTE *, void *);
+void make_pde_mask(PDE *, void *, uint32_t);
 void make_pte_mask(PTE *, void *, uint32_t);
 
 #define va_to_pa(addr) ((void*)(((uint32_t)(addr)) - KOFFSET))

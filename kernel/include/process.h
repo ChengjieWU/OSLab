@@ -2,7 +2,7 @@
 #define __PROCESS_H__
 
 #include "x86.h"
-#define KERNEL_STACK_SIZE PAGE_SIZE
+#define KERNEL_STACK_SIZE 1
 #define PCB_NUM 64					/* The maximum number of PCB terms is 64. */
 
 enum STATE {
@@ -15,13 +15,15 @@ enum STATE {
 
 
 typedef struct PCB {
-    void *tf;
+	void* tf;
+	int id;
     enum STATE state;
-    char kernelStack[KERNEL_STACK_SIZE];
+    unsigned char kernelStack[KERNEL_STACK_SIZE];
 	struct PCB* next;
 	CR3 cr3;
 	pid_t pid;
 	pid_t parent;
+	PDE* pgdir;
 } PCB;
 
 

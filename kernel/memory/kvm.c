@@ -34,11 +34,11 @@ void init_page()
 	pframe_idx = 0;
 	for (pdir_idx = 0; pdir_idx < PHY_MEM / PD_SIZE; pdir_idx ++) 
 	{
-		make_pde(&pdir[pdir_idx], ptable);
-		make_pde(&pdir[pdir_idx + KOFFSET / PD_SIZE], ptable);
+		make_pde_kernel(&pdir[pdir_idx], ptable);
+		make_pde_kernel(&pdir[pdir_idx + KOFFSET / PD_SIZE], ptable);
 		for (ptable_idx = 0; ptable_idx < NR_PTE; ptable_idx ++) 
 		{
-			make_pte(ptable, (void*)(pframe_idx << 12));
+			make_pte_kernel(ptable, (void*)(pframe_idx << 12));
 			pframe_idx ++;
 			ptable ++;
 		}

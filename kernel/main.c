@@ -10,7 +10,7 @@
 #include "memory.h"
 
 /* Kernel stack starts at 0x8000000 (end of phy-address), which is set in boot/start.S */
-#define USER_STACK 0x6000000 //(96MB)
+#define USER_STACK 0x804f000 //(96MB)
 
 #define GAME_OFFSET_IN_DISK KMEM
 
@@ -21,7 +21,7 @@ extern const unsigned char gImage_Universe[1440000];
 #ifdef IA32_PAGE
 void init_page();
 void init_mm();
-void temp_function();
+PDE* init_updir();
 #endif
 void init_segment();
 void init_idt();
@@ -76,7 +76,6 @@ void init_cond()
 	
 	init_mm();
 	
-	temp_function();
 	
 	printk("Here we go!\n");
 	
@@ -89,6 +88,13 @@ void init_cond()
 
 void here_we_go()
 {
+	PDE* updir = init_updir();
+	CR3 cr3;
+	cr3.val = 0;
+	cr3.page_directory_base = ((uint32_t)va_to_pa(updir)) >> 12;
+	
+	write_cr3(&cr3);
+	
 	struct Elf *elf;
 	struct Proghdr *ph, *eph;
 	unsigned char *pa, *i;

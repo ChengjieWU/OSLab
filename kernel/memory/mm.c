@@ -3,6 +3,8 @@
 #include "memory.h"
 #include "mmu.h"
 
+#include "device/video.h"
+
 typedef struct page_info {
 	bool free;
 	int cited;
@@ -98,6 +100,8 @@ PTE* pgdir_walk(PDE* pgdir, const void *va, bool create)
 			{
 				p->cited++;
 				physaddr_t phy_addr = page2pa(p);
+				/* Since there're two levels of page_translation, we leave page protection to the second level. */
+				/* So PDE terms are always set to user_mode. */
 				make_pde(&pgdir[PDX(va)], (void*)phy_addr);
 			}
 		}
@@ -106,26 +110,19 @@ PTE* pgdir_walk(PDE* pgdir, const void *va, bool create)
 	return &pgtable[PTX(va)];
 }
 
-
-// Map [va, va+size) of virtual address space to physical [pa, pa+size)
-// in the page table rooted at pgdir.  Size is a multiple of PGSIZE, and
-// va and pa are both page-aligned.
-// Use permission bits perm|PTE_P for the entries.
-//
-// This function is only intended to set up the ``static'' mappings
-// above UTOP. As such, it should *not* change the pp_ref field on the
-// mapped pages.
-
+/* Used only for map, don't allocate physical frame. */
 void boot_map_region(PDE *pgdir, uintptr_t va, unsigned long size, physaddr_t pa, int perm)
 {
-	uintptr_t shif = 0;
-	while (shif < size)
+	if (size % PAGE_SIZE != 0) panic("size is not the multiple of PAGE_SIZE!\n");
+	if (va % PAGE_SIZE != 0) panic("va is not the multiple of PAGE_SIZE!\n");
+	if (pa % PAGE_SIZE != 0) panic("pa is not the multiple of PAGE_SIZE!\n");
+	uintptr_t limit = va + size;
+	while (va < limit)
 	{
-		va = va + shif;
-		pa = pa + shif;
 		PTE* pgtable = pgdir_walk(pgdir, (const void*)va, true);
-		make_pte_mask(pgtable, (void*)pa, perm|PTE_P);
-		shif += PAGE_SIZE;
+		make_pte_mask(pgtable, (void*)pa, perm | PTE_P);
+		va += PAGE_SIZE;
+		pa += PAGE_SIZE;
 	}
 }
 
@@ -154,12 +151,15 @@ void boot_map_region(PDE *pgdir, uintptr_t va, unsigned long size, physaddr_t pa
 // Hint: The TA solution is implemented using pgdir_walk, page_remove,
 // and page2pa.
 //
+
+/* This is a currently simplified version. */
 int page_insert(PDE *pgdir, page_info* pp, void *va, int perm)
 {
 	PTE* pte = pgdir_walk(pgdir, (const void*)va, true);
 	if (pte->present == 1) return -1;
 	else
 	{
+		pp->cited++;
 		physaddr_t phy_addr = page2pa(pp);
 		make_pte_mask(pte, (void*)phy_addr, perm|PTE_P);
 		return 0;
@@ -167,14 +167,28 @@ int page_insert(PDE *pgdir, page_info* pp, void *va, int perm)
 }
 
 
-
-void temp_function()
+PDE* init_updir()
 {
+	/* Allocate a new physical page to store PDE table. */
+	page_info* pp = page_alloc(ALLOC_ZERO);
+	if (pp == NULL) panic("No free pages!\n");
+	pp->cited++;
+	physaddr_t phy_addr = page2pa(pp);
+	
+	PDE* updir = pa_to_va(phy_addr);
+	
+	/* Map kernel space to user space. */
+	/* IMPORTANT NOTE: PTE must be set to kernel mode to enable page protection! */
+	boot_map_region(updir, KOFFSET, PHY_MEM, 0, PTE_W);
+	boot_map_region(updir, VMEM_ADDR, PD_SIZE, VMEM_ADDR, PTE_W);
+	
 	uint32_t aa = 0x8048000;
 	int i = 0;
 	for (; i < 4096; i++)
 	{
-		page_insert(get_kpdir(), page_alloc(ALLOC_ZERO), (void*)(aa + i * PAGE_SIZE), 0xfff);
+		page_insert(updir, page_alloc(ALLOC_ZERO), (void*)(aa + i * PAGE_SIZE), PTE_U | PTE_W);
 	}
+
+	return updir;
 }
 

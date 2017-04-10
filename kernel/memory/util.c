@@ -1,5 +1,5 @@
-#include "x86/memory.h"
 #include "memory.h"
+#include "mmu.h"
 
 void make_invalid_pde(PDE *p) { p->val = 0;}
 
@@ -15,20 +15,29 @@ bool is_invalid_pte(PTE *p) { return (p->val == 0); }
 
 void make_pde(PDE *p, void *addr) 
 {
-	p->val = 0;
-	p->page_frame = ((uint32_t)addr) >> 12;
-	p->present = 1;
-	p->read_write = 1;
-	p->user_supervisor = 1;
+	make_pde_mask(p, addr, PTE_P | PTE_W | PTE_U);
 }
 
 void make_pte(PTE *p, void *addr) 
 {
+	make_pte_mask(p, addr, PTE_P | PTE_W | PTE_U);
+}
+
+void make_pde_kernel(PDE* p, void *addr)
+{
+	make_pde_mask(p, addr, PTE_P | PTE_W);
+}
+
+void make_pte_kernel(PTE* p, void *addr)
+{
+	make_pte_mask(p, addr, PTE_P | PTE_W);
+}
+
+void make_pde_mask(PDE *p, void *addr, uint32_t mask)
+{
 	p->val = 0;
+	p->val = mask;
 	p->page_frame = ((uint32_t)addr) >> 12;
-	p->present = 1;
-	p->read_write = 1;
-	p->user_supervisor = 1;
 }
 
 void make_pte_mask(PTE *p, void *addr, uint32_t mask)
