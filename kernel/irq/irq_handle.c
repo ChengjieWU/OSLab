@@ -36,16 +36,16 @@ void irq_handle(TrapFrame *tf) {
 
 	int irq = tf->irq;
 	current->tf = tf;
+	//printk("haha! = current->tf = %x\n", current->tf);
 
 	if (irq < 0) {
-		panic("Unhandled exception!");
-	} else if(irq == 0x80) {
+		panic("Unexpected exception #%d at eip = %x", irq, tf->eip);
+	} else if (irq == 0x80) {
 		do_syscall(tf);
+	} else if (irq == 14) {
+		page_fault_handler(tf);
 	} else if(irq < 1000) {
-		if (irq == 14) {
-			page_fault_handler(tf);
-		}
-		//panic("Unexpected exception #%d at eip = %x\nShould not get here!", irq, tf->eip);
+		panic("Unexpected exception #%d at eip = %x", irq, tf->eip);
 	} else if (irq >= 1000) {
 		int irq_id = irq - 1000;
 		assert(irq_id < NR_HARD_INTR);

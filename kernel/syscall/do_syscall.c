@@ -7,6 +7,7 @@ void load_vmem(const uint8_t *, int, int);
 void fullScreen(const unsigned char*);
 volatile uint32_t get_time();
 int handle_keys();
+void fork_kernel();
 
 /*
 uint32_t mm_brk(uint32_t);
@@ -85,6 +86,7 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_fullVideo: fullScreen((const unsigned char*)tf->ebx); break;
 		case SYS_time: tf->eax = get_time(); break;
 		case SYS_keyboard: tf->eax = handle_keys(); break;
+		case SYS_fork: fork_kernel(); break;
 		//case SYS_read: sys_read(tf); break;
 		//case SYS_open: sys_open(tf); break;
 		//case SYS_lseek: sys_lseek(tf); break;

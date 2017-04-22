@@ -3,6 +3,7 @@ STU_ID = 151220122
 BIN_DIR := bin
 BOOT   := $(BIN_DIR)/boot.bin
 KERNEL := $(BIN_DIR)/kernel.bin
+TEST   := $(BIN_DIR)/test.bin
 GAME   := $(BIN_DIR)/game.bin
 PROGRAM := $(BIN_DIR)/program.bin
 IMAGE  := disk.bin
@@ -39,14 +40,17 @@ OBJ_DIR        := obj
 LIB_DIR        := lib
 BOOT_DIR       := boot
 KERNEL_DIR     := kernel
+TEST_DIR       := test
 GAME_DIR	   := game
 OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
 OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
 OBJ_GAME_DIR   := $(OBJ_DIR)/$(GAME_DIR)
+OBJ_TEST_DIR   := $(OBJ_DIR)/$(TEST_DIR)
 
 LD_SCRIPT := $(shell find $(KERNEL_DIR) -name "*.ld")
 GAME_LD_SCRIPT	 := $(shell find $(GAME_DIR) -name "*.ld")
+TEST_LD_SCRIPT	 := $(shell find $(TEST_DIR) -name "*.ld")
 
 LIB_C := $(wildcard $(LIB_DIR)/*.c)
 LIB_O := $(LIB_C:%.c=$(OBJ_DIR)/%.o)
@@ -63,6 +67,9 @@ KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 
 GAME_C := $(shell find $(GAME_DIR) -name "*.c")
 GAME_O := $(GAME_C:%.c=$(OBJ_DIR)/%.o)
+
+TEST_C := $(shell find $(TEST_DIR) -name "*.c")
+TEST_O := $(TEST_C:%.c=$(OBJ_DIR)/%.o)
 
 $(IMAGE): $(BOOT) $(PROGRAM)
 	@mkdir -p $(BIN_DIR)
@@ -86,9 +93,9 @@ $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.[cS]
 	@$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
 	
 
-$(PROGRAM): $(KERNEL) $(GAME)
+$(PROGRAM): $(KERNEL) $(TEST)
 	@mkdir -p $(BIN_DIR)
-	cat $(KERNEL) $(GAME) > $(PROGRAM)
+	cat $(KERNEL) $(TEST) > $(PROGRAM)
 
 
 $(KERNEL): $(LD_SCRIPT)
@@ -119,6 +126,18 @@ $(OBJ_GAME_DIR)/%.o: $(GAME_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)/$(dir $<)
 	@echo cc $< -o $@
 	@$(CC) $(CFLAGS) -I ./game/include $< -o $@
+	
+	
+$(TEST): $(TEST_LD_SCRIPT)
+$(TEST): $(TEST_O) $(LIB_O)
+	@mkdir -p $(BIN_DIR)
+	@echo ld -o $@
+	@$(LD) -m elf_i386 -T $(TEST_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+$(OBJ_TEST_DIR)/%.o: $(TEST_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)/$(dir $<)
+	@echo cc $< -o $@
+	@$(CC) $(CFLAGS) -I ./test/include $< -o $@
 	
 
 	

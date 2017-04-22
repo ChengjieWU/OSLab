@@ -32,7 +32,7 @@ void init_timer() {
 
 volatile uint32_t time_tick = 0;
 
-void timer_event(void) {
+void timer_event() {
 	time_tick ++;
 	//printk("%u\n", time_tick);
 }

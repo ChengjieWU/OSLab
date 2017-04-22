@@ -8,6 +8,8 @@
 #include "keyboard.h"
 #include "video.h"
 
+#include "proc.h"
+
 /* include data */
 #include "picture.h"
 
@@ -94,6 +96,8 @@ void init_Game();
 /* Compiler won't allow main to be void, so we cannot use main. Instead, we use game_main. */
 void game_main(void)
 {
+	int t = fork();
+	if (t == 0) printf("This is a new process!\n");
 	printf("We are now in game!\n");
 	init_Game();
 	int key;
@@ -101,6 +105,9 @@ void game_main(void)
 	{
 		key = readKey();
 		if (key == K_Q) break;
+		/*if (key == K_Q) {
+			
+		}*/
 		else if (key == K_ENTER || key == K_SPACE) 
 		{
 			if (state != NOTDECIDED) {init_Game(); continue;}

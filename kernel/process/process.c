@@ -1,23 +1,30 @@
 #include "process.h"
 #include "irq.h"
+#include "memory.h"
 
 PCB idle;
 PCB* current = &idle;
 PCB pcb_pool[PCB_NUM];
 PCB* pcb_free_list;
+PCB* pcb_ready_list;
+PCB* pcb_blocked_list;
+int pid_pool;
 
 uint32_t request_for_page();
 PDE* init_updir();
 
 void init_PCB()
 {
+	pcb_ready_list = NULL;
+	pcb_blocked_list = NULL;
+	pid_pool = -1;		/* The first process is 0. */
 	int i;
 	for (i = 0; i < PCB_NUM; i++)
 	{
 		pcb_pool[i].tf = NULL;
 		pcb_pool[i].id = i;
 		pcb_pool[i].state = PROCESS_EMPTY;
-		pcb_pool[i].kernelStackMax = NULL;
+		pcb_pool[i].kernelStackBottom = NULL;
 		pcb_pool[i].pid = -1;
 		pcb_pool[i].parent = -1;
 		pcb_pool[i].pgdir = NULL;
@@ -34,19 +41,89 @@ PCB* pcb_alloc()
 	return p;
 }
 
+void add_ready_list(PCB* pcb)		//add to tail
+{
+	pcb->next = NULL;
+	pcb->state = PROCESS_READY;
+	PCB* p = pcb_ready_list;
+	if (p == NULL) pcb_ready_list = pcb;
+	else
+	{
+		while (p->next != NULL) p = p->next;
+		p->next = pcb;
+	}
+}
+PCB* pop_ready_list()				//pop the head
+{
+	if (pcb_ready_list != NULL)
+	{
+		PCB* p = pcb_ready_list;
+		pcb_ready_list = pcb_ready_list->next;
+		p->next = NULL;
+		return p;
+	}
+	else 
+		return NULL;
+}
+void add_blocked_list(PCB* pcb)		//add to tail
+{
+	pcb->next = NULL;
+	pcb->state = PROCESS_BLOCKED;
+	PCB* p = pcb_blocked_list;
+	if (p == NULL) pcb_blocked_list = pcb;
+	else
+	{
+		while (p->next != NULL) p = p->next;
+		p->next = pcb;
+	}
+}
+PCB* pop_blocked_list()				//pop the head
+{
+	if (pcb_blocked_list != NULL)
+	{
+		PCB* p = pcb_blocked_list;
+		pcb_blocked_list = pcb_blocked_list->next;
+		p->next = NULL;
+		return p;
+	}
+	else 
+		return NULL;
+}
 
-PCB* go_schedule()
+PCB* new_process()
 {
 	PCB* pcb = pcb_alloc();
-	pcb->state = PROCESS_READY;
-	pcb->pid = 0;	/* The first process. */
-	pcb->parent = -1;
+	pcb->state = PROCESS_BLOCKED;
+	pcb->parent = pid_pool;
+	pcb->pid = ++pid_pool;	
 	pcb->pgdir = init_updir();
 	pcb->next = NULL;
-	pcb->kernelStackMax = (uint8_t*)request_for_page();
-	pcb->tf = pcb->kernelStackMax + PAGE_SIZE;
+	/* ###### Restrict kernel stack to 4KB. ###### */
+	pcb->kernelStackBottom = (uint8_t*)request_for_page();
+	pcb->tf = pcb->kernelStackBottom + PAGE_SIZE;
+	
+	//printk("%x\t%x\n", pcb->kernelStackBottom, pcb->tf);
+	
 	return pcb;
 }
+
+void load_process_memory(PCB *pcb)
+{
+	PDE* updir = pcb->pgdir;
+	CR3 cr3;
+	cr3.val = 0;
+	cr3.page_directory_base = ((uint32_t)va_to_pa(updir)) >> 12;
+	//printk("\n%x\n", cr3.val);
+	write_cr3(&cr3);
+}
+void change_to_process(PCB* pcb)
+{
+	pcb->state = PROCESS_RUNNING;
+	current = pcb;
+	tss.esp0 = (uint32_t)current->tf;
+	//printk("tss.esp0 = %x\n", tss.esp0);
+}
+
 
 void schedule()
 {

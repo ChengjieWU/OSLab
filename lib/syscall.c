@@ -29,3 +29,7 @@ uint32_t getTime() {
 int readKey() {
 	return syscall(SYS_keyboard);
 }
+
+int fork() {
+	return syscall(SYS_fork);
+}

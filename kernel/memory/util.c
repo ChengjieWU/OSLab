@@ -9,9 +9,7 @@ bool is_invalid_pde(PDE *p) { return (p->val == 0); }
 
 bool is_invalid_pte(PTE *p) { return (p->val == 0); }
 
-/* For simplicity, we make all pages readable and writable for all ring 3 processes.
- * In Lab3, you may set different flags for different pages to perform the whole 
- * page level protection. */
+
 
 void make_pde(PDE *p, void *addr) 
 {
@@ -51,6 +49,20 @@ inline uint32_t get_pte_ind(uint32_t n) {
     return ((n & 0x3ff000)>>12); // 0000 0000 0011 1111 1111 0000 0000 0000
 }
 
+uintptr_t va_pte(PDE* p)
+{
+	uintptr_t tem = p->page_frame;
+	tem = tem << 12;
+	return (uintptr_t)pa_to_va(tem);
+}
+
+uintptr_t va_byte(PTE *p)
+{
+	uintptr_t tem = p->page_frame;
+	tem = tem << 12;
+	return (uintptr_t)pa_to_va(tem);
+}
+
 /**/
 uint32_t va_to_pa_i386(uint32_t pde_addr, uint32_t va) {
 
@@ -71,11 +83,4 @@ uint32_t va_to_pa_i386(uint32_t pde_addr, uint32_t va) {
     printk("va_to_pa_i386 = %x\n",tval);
     return (tval | (va & 0xfff)); // add offset to physical address
 }
-/*
-uint32_t pcb_va_to_pa(PCB *pcb, uint32_t va) {
-    uint32_t val = pcb->cr3.page_directory_base;
-    val = val<<12;
-    printk("pde_addr=%x\n",val);
-    return va_to_pa_i386(val,va);
 
-}*/

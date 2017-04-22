@@ -20,6 +20,10 @@ void make_pde_kernel(PDE *, void *);
 void make_pte_kernel(PTE *, void *);
 void make_pde_mask(PDE *, void *, uint32_t);
 void make_pte_mask(PTE *, void *, uint32_t);
+uintptr_t va_pte(PDE* p);
+uintptr_t va_byte(PTE *p);
+
+uint32_t request_for_page();
 
 #define va_to_pa(addr) ((void*)(((uint32_t)(addr)) - KOFFSET))
 

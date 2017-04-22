@@ -50,7 +50,7 @@ write_cr0(CR0 *cr0) {
 	asm volatile("movl %0, %%cr0" : : "r"(cr0->val));
 }
 
-/* read CR2, notice that CR2 is never written */
+/* read CR2, notice that CR2 is never written, dealing with page fault! */
 static inline uint32_t
 read_cr2() {
 	uint32_t val;

@@ -18,7 +18,7 @@ typedef struct PCB {
 	void* tf;		/* ###### Due to unknown reason, this term must be the first! ###### */
 	int id;
     enum STATE state;
-    uint8_t* kernelStackMax; /* Allocate a page for kernel stack. */
+    uint8_t* kernelStackBottom; /* Allocate a page for kernel stack. */
 	struct PCB* next;
 	CR3 cr3;
 	pid_t pid;
@@ -26,8 +26,9 @@ typedef struct PCB {
 	PDE* pgdir;
 } PCB;
 
-void init_PCB();
-
+//void init_PCB();
+//PCB* new_process();
+//void change_to_process(PCB* pcb);
 
 extern PCB idle;
 extern PCB* current;

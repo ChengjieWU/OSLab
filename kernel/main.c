@@ -3,36 +3,41 @@
 #include "x86.h"
 #include "elf.h"
 #include "string.h"
-#include "device/keyboard.h"
-#include "device/timer.h"
 
 #include "process.h"
 
 #include "memory.h"
 
-/* Kernel stack starts at 0x1000000 (NOT end of phy-address), which is set in boot/start.S */
-#define USER_STACK 0xc0000000 //(96MB)
+/* Kernel stack starts at 0xc1000000 (NOT end of phy-address), which is set in boot/start.S */
+#define USER_STACK 0xc0000000
 
 #define GAME_OFFSET_IN_DISK KMEM
 
 void readseg(unsigned char*,int,int);
 
-extern const unsigned char gImage_Universe[1440000];
-
-PCB* go_schedule();
 #ifdef IA32_PAGE
 void init_page();
 void init_mm();
 PDE* init_updir();
 #endif
+
 void init_segment();
 void init_idt();
 void init_i8259();
 void init_serial();
-void add_irq_handle(int,void (*)(void));
+void init_timer();
 
-void init_cond();
-void here_we_go();
+void add_irq_handle(int,void (*)(void));
+void keyboard_event();
+void timer_event();
+
+void init_PCB();
+void change_to_process(PCB*);
+PCB* new_process();
+void load_process_memory(PCB *pcb);
+
+void init();
+void first_loader();
 void printk_test();
 
 int main()
@@ -42,18 +47,18 @@ int main()
 	/* After paging is enabled, transform %esp to virtual address. */
 	//asm volatile("addl %0, %%esp" : : "i"(KOFFSET));
 	asm volatile (" addl %0, %%esp\n\t\
-					jmp *%1": : "r"(KOFFSET), "r"(init_cond));
-					
-	assert(0);
-#endif	
-	/* Jump to init_cond() to continue initialization. */
-	asm volatile("jmp *%0" : : "r"(init_cond));
+					jmp *%1": : "r"(KOFFSET), "r"(init));	
+	panic("should not reach here");
+#else
+	/* These will never be used. */
+	asm volatile("jmp *%0" : : "r"(init));
 
 	panic("should not reach here");
+#endif
 	return 0;
 }
 
-void init_cond()
+void init()
 {
 	init_segment();
 	init_idt();
@@ -64,7 +69,7 @@ void init_cond()
 	init_timer();
 	
 	/* Printk test */
-	printk_test();
+	//printk_test();
 	
 	/* Create and test video memory write and read */
 	init_vmem_addr();
@@ -82,26 +87,19 @@ void init_cond()
 	
 	printk("Here we go!\n");
 	
-	
 	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
-	here_we_go();
+	
+	first_loader();
 
 	panic("should not get here!");
 }
 
-void here_we_go()
+void first_loader()
 {
-	PCB* First_Proc = go_schedule();
-	PDE* updir = First_Proc->pgdir;
-	current = First_Proc;
-	tss.esp0 = (uint32_t)current->tf;
-	
-	CR3 cr3;
-	cr3.val = 0;
-	cr3.page_directory_base = ((uint32_t)va_to_pa(updir)) >> 12;
-	
-	write_cr3(&cr3);
-	
+	PCB *pro = new_process();
+	load_process_memory(pro);
+	change_to_process(pro);
+
 	struct Elf *elf;
 	struct Proghdr *ph, *eph;
 	unsigned char *pa, *i;
@@ -110,6 +108,7 @@ void here_we_go()
 	elf = (struct Elf*)buf;
 
 	readseg((unsigned char*)elf, 4096, GAME_OFFSET_IN_DISK);
+
 
 	ph = (struct Proghdr*)((char *)elf + elf->e_phoff);
 	eph = ph + elf->e_phnum;
@@ -120,10 +119,13 @@ void here_we_go()
 	}
 	
 	
-	sti();
 	/* Now we have PCB! Kernel stack is stored in PCB, and allocated by mm, This will never use! */
 	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
 	//asm volatile("movl %%esp, %0" : "=r"(tss.esp0));
+	
+	//uint32_t eflags_t;
+	//asm volatile("movl %%eflags, %0" : "=r"(eflags_t));
+	//eflags_t = eflags_t | 0x200;
 	
 	asm volatile("movl %0, %%eax" : : "r"(elf->e_entry));
 	
@@ -138,10 +140,18 @@ void here_we_go()
 	
 	asm volatile("pushl %0" : : "i"(SELECTOR_USER(4)));	//push user's ss
 	asm volatile("pushl %0" : : "i"(USER_STACK));		//push user's esp
+	
+	/* This is not strict here. There are still chances to have kernel interruptions. */
+	sti();
 	asm volatile("pushfl");								//push eflags
+	cli();
+	
+	//asm volatile("push %0" : : "r"(eflags_t));
+	
 	asm volatile("pushl %0" : : "i"(SELECTOR_USER(3)));	//push user's cs
 	asm volatile("pushl %eax");							//push user's eip
 	
+	tss.esp0 = (uint32_t)current->kernelStackBottom + PAGE_SIZE;
 	/* Here we go! */
 	asm volatile("iret");
 }

@@ -15,7 +15,7 @@ static const int keycode_array[] = {
 
 static int key_state[NR_KEYS];
 
-void keyboard_event(void) {
+void keyboard_event() {
 	int key_code = in_byte(0x60); 
 	//printk("%x\n", key_code);
 	int i;
