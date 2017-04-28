@@ -6,11 +6,9 @@
 PCB* new_process();
 void change_to_process(PCB* pcb);
 void load_process_memory(PCB *pcb);
-void schedule();
 
 void fork_kernel()
 {
-	//printk("fork_kernel!\n");
 	PCB* child = new_process();
 	PCB* parent = current;
 	child->parent = parent->pid;
@@ -22,7 +20,7 @@ void fork_kernel()
 	child->tf = (void *)((uint32_t)child->kernelStackBottom + ((uint32_t)parent->tf - (uint32_t)parent->kernelStackBottom));
 	
 	((TrapFrame *)(child->tf))->eax = 0;
-	((TrapFrame *)(parent->tf))->eax = 100;
+	((TrapFrame *)(parent->tf))->eax = child->pid;
 	
 	uint32_t pdir_idx;
 	for (pdir_idx = 0; pdir_idx < KOFFSET / PD_SIZE; pdir_idx++)
@@ -53,4 +51,7 @@ void fork_kernel()
 	change_to_process(child);
 }
 
-
+int _get_pid()
+{
+	return current->pid;
+}

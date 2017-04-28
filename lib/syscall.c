@@ -33,3 +33,7 @@ int readKey() {
 int fork() {
 	return syscall(SYS_fork);
 }
+
+int getpid() {
+	return syscall(SYS_getpid);
+}
