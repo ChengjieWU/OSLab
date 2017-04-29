@@ -116,6 +116,11 @@ wait_intr() {
 	asm volatile("hlt");
 }
 
+/* flush tlb */
+static inline void invlpg(void *addr)
+{
+	asm volatile("invlpg (%0)" : : "r" (addr) : "memory");
+}
 
 #define NR_IRQ    256
 

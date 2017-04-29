@@ -35,6 +35,7 @@ void init_PCB();
 void change_to_process(PCB*);
 PCB* new_process();
 void load_process_memory(PCB *pcb);
+PCB* pop_ready_list();
 
 void init();
 void first_loader();
@@ -60,18 +61,20 @@ int main()
 
 void init()
 {
+	init_serial();
 	init_segment();
 	init_idt();
 	init_i8259();
-	init_serial();
 	add_irq_handle(0, timer_event);
 	add_irq_handle(1, keyboard_event);
 	init_timer();
 	
+	printk("\nBase elements initialized.\n");
 	/* Printk test */
 	//printk_test();
 	
 	/* Create and test video memory write and read */
+	printk("Initialize video...\n");
 	init_vmem_addr();
 #ifdef IA32_PAGE
 	init_vmem_space();
@@ -81,11 +84,11 @@ void init()
 #endif
 	init_vmem();
 	
+	printk("Initialize memory management...\n");
 	init_mm();
 	
+	printk("Initialize process control block...\n");
 	init_PCB();
-	
-	printk("Here we go!\n");
 	
 	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
 	
@@ -96,10 +99,13 @@ void init()
 
 void first_loader()
 {
+	printk("Creating the frist process...\n");
 	PCB *pro = new_process();
+	pro = pop_ready_list();
 	load_process_memory(pro);
 	change_to_process(pro);
 
+	printk("Loading user programme...\n");
 	struct Elf *elf;
 	struct Proghdr *ph, *eph;
 	unsigned char *pa, *i;
@@ -118,7 +124,7 @@ void first_loader()
 		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
 	}
 	
-	
+	printk("Here we go!\n\n");
 	/* Now we have PCB! Kernel stack is stored in PCB, and allocated by mm, This will never use! */
 	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
 	//asm volatile("movl %%esp, %0" : "=r"(tss.esp0));

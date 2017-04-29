@@ -8,6 +8,9 @@ GAME   := $(BIN_DIR)/game.bin
 PROGRAM := $(BIN_DIR)/program.bin
 IMAGE  := disk.bin
 
+# Could be switched between GAME and TEST.
+TARGET := $(TEST)
+
 CC      := gcc
 LD      := ld
 OBJCOPY := objcopy
@@ -93,9 +96,9 @@ $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.[cS]
 	@$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
 	
 
-$(PROGRAM): $(KERNEL) $(TEST)
+$(PROGRAM): $(KERNEL) $(TARGET)
 	@mkdir -p $(BIN_DIR)
-	cat $(KERNEL) $(TEST) > $(PROGRAM)
+	cat $(KERNEL) $(TARGET) > $(PROGRAM)
 
 
 $(KERNEL): $(LD_SCRIPT)

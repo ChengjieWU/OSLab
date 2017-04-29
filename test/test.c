@@ -4,13 +4,16 @@
 
 void test_main()
 {
-	printf("Ping!\n");
-	int id = getpid();
-	printf("My pid is %d\n", id);
-	int t = fork();
-	if (t == 0) printf("Pong!\n");
-	else printf("Something is wrong!\n");
-	id = getpid();
-	printf("My pid is %d\n", id);
-	while (1);
+	fork();
+	int t = getpid();
+	if (t == 0)
+	{
+		printf("Ping\n");
+		exit();
+	}
+	else 
+	{
+		printf("Pong\n");
+		while (true);
+	}
 }

@@ -3,5 +3,6 @@
 
 int fork();
 int getpid();
+int exit();
 
 #endif

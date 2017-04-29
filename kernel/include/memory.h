@@ -24,6 +24,7 @@ uintptr_t va_pte(PDE* p);
 uintptr_t va_byte(PTE *p);
 
 uint32_t request_for_page();
+void page_remove(PDE *, void *);
 
 #define va_to_pa(addr) ((void*)(((uint32_t)(addr)) - KOFFSET))
 

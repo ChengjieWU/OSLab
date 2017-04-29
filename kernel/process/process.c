@@ -41,6 +41,19 @@ PCB* pcb_alloc()
 	return p;
 }
 
+void pcb_free(PCB *pcb)
+{
+	if (pcb == NULL) panic("Trying to free an empty PCB!\n");
+	pcb->tf = NULL;
+	pcb->state = PROCESS_EMPTY;
+	pcb->kernelStackBottom = NULL;
+	pcb->pid = -1;
+	pcb->parent = 1;
+	pcb->pgdir = NULL;
+	pcb->next = pcb_free_list;
+	pcb_free_list = pcb;
+}
+
 void add_ready_list(PCB* pcb)		//add to tail
 {
 	pcb->next = NULL;
@@ -93,7 +106,6 @@ PCB* pop_blocked_list()				//pop the head
 PCB* new_process()
 {
 	PCB* pcb = pcb_alloc();
-	pcb->state = PROCESS_BLOCKED;
 	pcb->parent = pid_pool;
 	pcb->pid = ++pid_pool;	
 	pcb->pgdir = init_updir();
@@ -103,6 +115,8 @@ PCB* new_process()
 	pcb->tf = pcb->kernelStackBottom + PAGE_SIZE;
 	
 	//printk("%x\t%x\n", pcb->kernelStackBottom, pcb->tf);
+	
+	add_ready_list(pcb);
 	
 	return pcb;
 }
@@ -126,7 +140,7 @@ void change_to_process(PCB* pcb)
 
 
 void schedule()
-{
+{	
 	uint32_t esp0 = (uint32_t)current->tf;		//free space of TrapFrame
     esp0 += sizeof(struct TrapFrame);
     tss.esp0 = esp0;

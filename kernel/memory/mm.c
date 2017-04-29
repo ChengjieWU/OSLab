@@ -70,7 +70,7 @@ static page_info* page_alloc(int alloc_flags)
 	return p;
 }
 
-/*static void page_free(page_info* pp)
+static void page_free(page_info* pp)
 {
 	pp->free = true;
 	pp->next = page_free_list;
@@ -81,7 +81,42 @@ static void page_dec_cited(page_info* pp)
 {
 	if (--pp->cited == 0)
 		page_free(pp);
-}*/
+}
+
+page_info *page_lookup(PDE *pgdir, void *va)
+{
+	uint32_t pde_idx = PDX(va);
+	uint32_t pte_idx = PTX(va);
+	uint32_t page_offset = PGOFF(va);
+	if (pgdir[pde_idx].present)
+	{
+		PTE *pgtable = (PTE *)va_pte(&pgdir[pde_idx]);
+		if (pgtable[pte_idx].present)
+		{
+			physaddr_t pa = (pgtable[pte_idx].page_frame << 12) + page_offset;
+			page_info *ret = pa2page(pa);
+			return ret;
+		}
+	}
+	return NULL;
+}
+
+void tlb_invalidate(void *va)
+{
+	invlpg(va);
+}
+
+void page_remove(PDE *pgdir, void *va)
+{
+	page_info *p = page_lookup(pgdir, va);
+	if (p == NULL) return;
+	tlb_invalidate(va);
+	uint32_t pde_idx = PDX(va);
+	uint32_t pte_idx = PTX(va);
+	PTE *pgtable = (PTE *)va_pte(&pgdir[pde_idx]);
+	pgtable[pte_idx].present = 0;
+	page_dec_cited(p);
+}
 
 static PTE* pgdir_walk(PDE* pgdir, const void *va, bool create)
 {
@@ -122,35 +157,11 @@ static void boot_map_region(PDE *pgdir, uintptr_t va, unsigned long size, physad
 	}
 }
 
-//
-// Map the physical page 'pp' at virtual address 'va'.
-// The permissions (the low 12 bits) of the page table entry
-// should be set to 'perm|PTE_P'.
-//
-// Requirements
-//   - If there is already a page mapped at 'va', it should be page_removed().
-//   - If necessary, on demand, a page table should be allocated and inserted
-//     into 'pgdir'.
-//   - pp->pp_ref should be incremented if the insertion succeeds.
-//   - The TLB must be invalidated if a page was formerly present at 'va'.
-//
-// Corner-case hint: Make sure to consider what happens when the same
-// pp is re-inserted at the same virtual address in the same pgdir.
-// However, try not to distinguish this case in your code, as this
-// frequently leads to subtle bugs; there's an elegant way to handle
-// everything in one code path.
-//
-// RETURNS:
-//   0 on success
-//   -E_NO_MEM, if page table couldn't be allocated
-//
-// Hint: The TA solution is implemented using pgdir_walk, page_remove,
-// and page2pa.
-//
-
 /* This is a currently simplified version. */
 static int page_insert(PDE *pgdir, page_info* pp, void *va, int perm)
 {
+	/* remove the existed page first before inserting */
+	page_remove(pgdir, va);
 	PTE* pte = pgdir_walk(pgdir, (const void*)va, true);
 	if (pte->present == 1) return -1;
 	else

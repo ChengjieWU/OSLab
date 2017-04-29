@@ -20,6 +20,7 @@ static int handle_count = 0;
 void schedule();
 void do_syscall(TrapFrame *);
 void page_fault_handler(TrapFrame *);
+void add_ready_list(PCB *);
 
 void add_irq_handle(int irq, void (*func)(void) ) {
 	assert(irq < NR_HARD_INTR);
@@ -36,6 +37,7 @@ void irq_handle(TrapFrame *tf) {
 
 	int irq = tf->irq;
 	current->tf = tf;
+	
 	//printk("haha! = current->tf = %x\n", current->tf);
 
 	if (irq < 0) {

@@ -37,3 +37,7 @@ int fork() {
 int getpid() {
 	return syscall(SYS_getpid);
 }
+
+int exit() {
+	return syscall(SYS_exit);
+}

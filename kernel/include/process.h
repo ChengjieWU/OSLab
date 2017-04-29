@@ -15,7 +15,7 @@ enum STATE {
 
 
 typedef struct PCB {
-	void* tf;		/* ###### Due to unknown reason, this term must be the first! ###### */
+	void* tf;		/* This term must be the first! The reason lies in do_syscall.s, using current to lacate trapframe! */
 	int id;
     enum STATE state;
     uint8_t* kernelStackBottom; /* Allocate a page for kernel stack. */
