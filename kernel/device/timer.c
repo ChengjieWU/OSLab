@@ -1,5 +1,6 @@
 #include "common.h"
 #include "x86.h"
+#include "process.h"
 
 #define PORT_CH_0 0x40
 #define PORT_CMD 0x43
@@ -31,9 +32,13 @@ void init_timer() {
 }
 
 volatile uint32_t time_tick = 0;
+extern PCB *current;
+extern void timeChange();
+#define timeStep 100
 
 void timer_event() {
 	time_tick ++;
+	if (++current->cpuTime > timeStep) timeChange();
 	//printk("%u\n", time_tick);
 }
 

@@ -9,6 +9,7 @@ void load_process_memory(PCB *);
 void add_ready_list(PCB* );
 PCB* pop_ready_list();
 void pcb_free(PCB *);
+void page_remove_phy(physaddr_t);
 
 void fork_kernel()
 {
@@ -65,23 +66,28 @@ int get_pid()
 void exit_kernel()
 {	
 	PDE* pgdir = current->pgdir;
+	
 	uint32_t pdir_idx;
 	for (pdir_idx = 0; pdir_idx < KOFFSET / PD_SIZE; pdir_idx++)
 	{
 		if (pgdir[pdir_idx].present)
 		{
 			PTE* pgtable = (PTE *)va_pte(&pgdir[pdir_idx]);
+			physaddr_t pa = (physaddr_t)pgdir[pdir_idx].page_frame << 12;
 			uint32_t ptable_idx;
 			for (ptable_idx = 0; ptable_idx < NR_PTE; ptable_idx++)
 			{
 				if (pgtable[ptable_idx].present)
 					page_remove(pgdir, (void *)va_byte(&pgtable[ptable_idx]));
 			}
+			page_remove_phy(pa);
 		}
 	}
 	pcb_free(current);
 	
 	PCB* pcb = pop_ready_list();
+	if (pcb == NULL) panic("\nThere are no processes. Machine stops!\n");
 	load_process_memory(pcb);
 	change_to_process(pcb);
+	
 }

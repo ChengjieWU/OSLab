@@ -28,6 +28,7 @@ void init_PCB()
 		pcb_pool[i].pid = -1;
 		pcb_pool[i].parent = -1;
 		pcb_pool[i].pgdir = NULL;
+		pcb_pool[i].cpuTime = 0;
 		pcb_pool[i].next = pcb_free_list;
 		pcb_free_list = &pcb_pool[i];
 	}
@@ -50,6 +51,7 @@ void pcb_free(PCB *pcb)
 	pcb->pid = -1;
 	pcb->parent = 1;
 	pcb->pgdir = NULL;
+	pcb->cpuTime = 0;
 	pcb->next = pcb_free_list;
 	pcb_free_list = pcb;
 }
@@ -144,4 +146,13 @@ void schedule()
 	uint32_t esp0 = (uint32_t)current->tf;		//free space of TrapFrame
     esp0 += sizeof(struct TrapFrame);
     tss.esp0 = esp0;
+}
+
+void timeChange()
+{
+	current->cpuTime = 0;
+	add_ready_list(current);
+	PCB* pcb = pop_ready_list();
+	load_process_memory(pcb);
+	change_to_process(pcb);
 }

@@ -118,6 +118,17 @@ void page_remove(PDE *pgdir, void *va)
 	page_dec_cited(p);
 }
 
+void page_remove_phy(physaddr_t pa)
+{
+	page_info *p = pa2page(pa);
+	if (p == NULL) 
+	{
+		printk("Null pa at page_remove_phy!\n");
+		return;
+	}
+	page_dec_cited(p);
+}
+
 static PTE* pgdir_walk(PDE* pgdir, const void *va, bool create)
 {
 	if (pgdir[PDX(va)].present == 0)

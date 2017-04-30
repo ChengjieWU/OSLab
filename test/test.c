@@ -6,14 +6,11 @@ void test_main()
 {
 	fork();
 	int t = getpid();
-	if (t == 0)
+	//printf("I'm process No.%d\n", t);
+	while(1) 
 	{
-		printf("Ping\n");
-		exit();
+		if (t == 0) printf("i\n");
+		else if (t == 1) printf("oo\n");
 	}
-	else 
-	{
-		printf("Pong\n");
-		while (true);
-	}
+	exit();
 }

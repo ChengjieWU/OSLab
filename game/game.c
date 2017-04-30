@@ -96,6 +96,8 @@ void init_Game();
 /* Compiler won't allow main to be void, so we cannot use main. Instead, we use game_main. */
 void game_main(void)
 {
+	fork();
+	printf("I'm process No.%d\n", getpid());
 	printf("We are now in game!\n");
 	init_Game();
 	int key;
@@ -103,9 +105,6 @@ void game_main(void)
 	{
 		key = readKey();
 		if (key == K_Q) break;
-		/*if (key == K_Q) {
-			
-		}*/
 		else if (key == K_ENTER || key == K_SPACE) 
 		{
 			if (state != NOTDECIDED) {init_Game(); continue;}
@@ -122,9 +121,9 @@ void game_main(void)
 				fullVideo(gImage_FAILURE);
 				printf("Round %d: You LOSE!\n", roundNum++);
 			}
-			//else return -1;
 		}
 	}
+	exit();
 }
 
 /*--------------------------------------------------------------------------*/
