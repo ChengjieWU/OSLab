@@ -25,6 +25,7 @@ typedef struct PCB {
 	pid_t parent;
 	PDE* pgdir;
 	uint32_t cpuTime;
+	int sleepTime;
 } PCB;
 
 //void init_PCB();

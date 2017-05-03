@@ -4,5 +4,6 @@
 int fork();
 int getpid();
 int exit();
+int sleep(int);
 
 #endif

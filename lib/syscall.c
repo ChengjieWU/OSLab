@@ -41,3 +41,7 @@ int getpid() {
 int exit() {
 	return syscall(SYS_exit);
 }
+
+int sleep(int t) {
+	return syscall(SYS_wait4, t);
+}

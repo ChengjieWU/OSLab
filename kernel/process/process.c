@@ -9,6 +9,8 @@ PCB* pcb_free_list;
 PCB* pcb_ready_list;
 PCB* pcb_blocked_list;
 int pid_pool;
+bool hasBlocked;
+
 
 uint32_t request_for_page();
 PDE* init_updir();
@@ -18,6 +20,7 @@ void init_PCB()
 	pcb_ready_list = NULL;
 	pcb_blocked_list = NULL;
 	pid_pool = -1;		/* The first process is 0. */
+	hasBlocked = false;
 	int i;
 	for (i = 0; i < PCB_NUM; i++)
 	{
@@ -29,6 +32,7 @@ void init_PCB()
 		pcb_pool[i].parent = -1;
 		pcb_pool[i].pgdir = NULL;
 		pcb_pool[i].cpuTime = 0;
+		pcb_pool[i].sleepTime = 0;
 		pcb_pool[i].next = pcb_free_list;
 		pcb_free_list = &pcb_pool[i];
 	}
@@ -52,6 +56,7 @@ void pcb_free(PCB *pcb)
 	pcb->parent = 1;
 	pcb->pgdir = NULL;
 	pcb->cpuTime = 0;
+	pcb->sleepTime = 0;
 	pcb->next = pcb_free_list;
 	pcb_free_list = pcb;
 }
@@ -80,17 +85,52 @@ PCB* pop_ready_list()				//pop the head
 	else 
 		return NULL;
 }
-void add_blocked_list(PCB* pcb)		//add to tail
+void add_blocked_list(PCB* pcb, uint32_t t)		//add to tail
 {
+	/*printk("before: ");
+	PCB *ta = pcb_blocked_list;
+	for (; ta != NULL; ta = ta->next) printk("%d ", ta->pid);
+	printk("\n");*/
 	pcb->next = NULL;
 	pcb->state = PROCESS_BLOCKED;
-	PCB* p = pcb_blocked_list;
-	if (p == NULL) pcb_blocked_list = pcb;
+	if (pcb_blocked_list == NULL) 
+	{
+		pcb->sleepTime = t;
+		pcb_blocked_list = pcb;
+		hasBlocked = true;
+	}
 	else
 	{
-		while (p->next != NULL) p = p->next;
-		p->next = pcb;
+		PCB *p = pcb_blocked_list;
+		uint32_t cut = p->sleepTime;
+		if (t < cut)
+		{
+			p->sleepTime -= t;
+			pcb->sleepTime = t;
+			pcb->next = p;
+			pcb_blocked_list = pcb;
+		}
+		else
+		{
+			PCB* q = p->next;
+			while (p->next != NULL)
+			{
+				if (cut + q->sleepTime > t) break;
+				cut += q->sleepTime;
+				p = p->next;
+				q = q->next;
+			}
+			printk("");
+			if (q != NULL) q->sleepTime -= (t - cut);
+			pcb->sleepTime = t - cut;
+			pcb->next = q;
+			p->next = pcb;
+		}
 	}
+	/*printk("after: ");
+	ta = pcb_blocked_list;
+	for (; ta != NULL; ta = ta->next) printk("%d ", ta->pid);
+	printk("\n");*/
 }
 PCB* pop_blocked_list()				//pop the head
 {
@@ -99,6 +139,7 @@ PCB* pop_blocked_list()				//pop the head
 		PCB* p = pcb_blocked_list;
 		pcb_blocked_list = pcb_blocked_list->next;
 		p->next = NULL;
+		if (pcb_blocked_list == NULL) hasBlocked = false;
 		return p;
 	}
 	else 
@@ -148,11 +189,3 @@ void schedule()
     tss.esp0 = esp0;
 }
 
-void timeChange()
-{
-	current->cpuTime = 0;
-	add_ready_list(current);
-	PCB* pcb = pop_ready_list();
-	load_process_memory(pcb);
-	change_to_process(pcb);
-}

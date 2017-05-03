@@ -157,6 +157,7 @@ void first_loader()
 	asm volatile("pushl %0" : : "i"(SELECTOR_USER(3)));	//push user's cs
 	asm volatile("pushl %eax");							//push user's eip
 	
+	current->cpuTime = 0;
 	tss.esp0 = (uint32_t)current->kernelStackBottom + PAGE_SIZE;
 	/* Here we go! */
 	asm volatile("iret");

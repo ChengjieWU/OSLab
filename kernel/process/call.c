@@ -10,6 +10,8 @@ void add_ready_list(PCB* );
 PCB* pop_ready_list();
 void pcb_free(PCB *);
 void page_remove_phy(physaddr_t);
+void add_blocked_list(PCB*, uint32_t);
+PCB* pop_blocked_list();
 
 void fork_kernel()
 {
@@ -90,4 +92,30 @@ void exit_kernel()
 	load_process_memory(pcb);
 	change_to_process(pcb);
 	
+}
+
+void timeChange()
+{
+	current->cpuTime = 0;
+	add_ready_list(current);
+	PCB* pcb = pop_ready_list();
+	load_process_memory(pcb);
+	change_to_process(pcb);
+}
+
+void sleep_kernel(int hl)
+{
+	current->cpuTime = 0;
+	add_blocked_list(current, hl);
+	PCB* pcb = pop_ready_list();
+	if (pcb == NULL) panic("\nThere are no processes. Machine stops!\n");
+	load_process_memory(pcb);
+	change_to_process(pcb);
+}
+
+void wakeup()
+{
+	PCB *p = pop_blocked_list();
+	p->sleepTime = 0;
+	add_ready_list(p);
 }

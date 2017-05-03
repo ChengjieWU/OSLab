@@ -34,11 +34,17 @@ void init_timer() {
 volatile uint32_t time_tick = 0;
 extern PCB *current;
 extern void timeChange();
-#define timeStep 100
+#define timeStep 10
+extern bool hasBlocked;
+extern void wakeup();
+extern PCB *pcb_blocked_list;
 
 void timer_event() {
-	time_tick ++;
-	if (++current->cpuTime > timeStep) timeChange();
+	time_tick++;
+	current->cpuTime++;
+	if (hasBlocked) pcb_blocked_list->sleepTime--;
+	if (hasBlocked && pcb_blocked_list->sleepTime <= 0) wakeup();
+	if (current->cpuTime > timeStep) timeChange();
 	//printk("%u\n", time_tick);
 }
 

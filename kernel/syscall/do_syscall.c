@@ -10,6 +10,7 @@ int handle_keys();
 void fork_kernel();
 int get_pid();
 void exit_kernel();
+void sleep_kernel(uint32_t);
 
 /*
 uint32_t mm_brk(uint32_t);
@@ -91,6 +92,7 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_fork: fork_kernel(); break;
 		case SYS_getpid: tf->eax = get_pid(); break;
 		case SYS_exit: exit_kernel(); break;
+		case SYS_wait4: sleep_kernel((int)tf->ebx); break;
 		//case SYS_read: sys_read(tf); break;
 		//case SYS_open: sys_open(tf); break;
 		//case SYS_lseek: sys_lseek(tf); break;
