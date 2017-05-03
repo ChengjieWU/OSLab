@@ -96,10 +96,21 @@ void init_Game();
 /* Compiler won't allow main to be void, so we cannot use main. Instead, we use game_main. */
 void game_main(void)
 {
-	fork();
-	printf("I'm process No.%d\n", getpid());
+	//fork();
+	//printf("I'm process No.%d\n", getpid());
 	printf("We are now in game!\n");
 	init_Game();
+	fork();
+	if (getpid() == 1) 
+	{
+		int i = 0;
+		while(true)
+		{
+			printf("Time is %d\n", i);
+			i += 1;;
+			sleep(1000);
+		}
+	}
 	int key;
 	while (true)
 	{

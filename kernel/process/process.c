@@ -87,7 +87,7 @@ PCB* pop_ready_list()				//pop the head
 }
 void add_blocked_list(PCB* pcb, uint32_t t)		//add to tail
 {
-	/*printk("before: ");
+	/*printk("before: ");		//for debug
 	PCB *ta = pcb_blocked_list;
 	for (; ta != NULL; ta = ta->next) printk("%d ", ta->pid);
 	printk("\n");*/
@@ -120,7 +120,7 @@ void add_blocked_list(PCB* pcb, uint32_t t)		//add to tail
 				p = p->next;
 				q = q->next;
 			}
-			printk("");
+			//printk("");
 			if (q != NULL) q->sleepTime -= (t - cut);
 			pcb->sleepTime = t - cut;
 			pcb->next = q;
