@@ -106,7 +106,7 @@ void game_main(void)
 		int i = 0;
 		while(true)
 		{
-			printf("Time is %d\n", i);
+			printf("Gametime: %d...\n", i);
 			i += 1;;
 			sleep(1000);
 		}

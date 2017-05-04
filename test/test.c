@@ -12,25 +12,25 @@ void test_main()
 	while (1)
 	{
 		int t = getpid();
-		if (t == 1) 
+		if (t == 3) 
 		{
-			printf("*********\n");
 			sleep(4000);
+			printf("*********\n");
 		}
 		else if (t == 2) 
 		{
-			printf("******\n");
 			sleep(2000);
+			printf("******\n");
 		}
-		else if (t == 3) 
+		else if (t == 1) 
 		{
-			printf("***\n");
 			sleep(1000);
+			printf("***\n");
 		}
 		else if (t == 4) 
 		{
-			printf("************\n");
 			sleep(8000);
+			printf("************\n");
 		}
 	}
 	exit();
