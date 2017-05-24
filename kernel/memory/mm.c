@@ -54,6 +54,7 @@ void init_mm()
 	}
 }
 
+/* Allocate a free physical page. */
 static page_info* page_alloc(int alloc_flags)
 {
 	if (page_free_list == NULL) return NULL;
@@ -70,6 +71,7 @@ static page_info* page_alloc(int alloc_flags)
 	return p;
 }
 
+/* Free a physical page. */
 static void page_free(page_info* pp)
 {
 	pp->free = true;
@@ -77,12 +79,14 @@ static void page_free(page_info* pp)
 	page_free_list = pp;
 }
 
+/* Decrease the cited number of a physical page. */
 static void page_dec_cited(page_info* pp)
 {
 	if (--pp->cited == 0)
 		page_free(pp);
 }
 
+/* Look up the physical frame according to virtual address. */
 page_info *page_lookup(PDE *pgdir, void *va)
 {
 	uint32_t pde_idx = PDX(va);
@@ -106,6 +110,7 @@ void tlb_invalidate(void *va)
 	invlpg(va);
 }
 
+/* Remove a page according to virtual address. */
 void page_remove(PDE *pgdir, void *va)
 {
 	page_info *p = page_lookup(pgdir, va);
@@ -118,6 +123,7 @@ void page_remove(PDE *pgdir, void *va)
 	page_dec_cited(p);
 }
 
+/* Remove a page according to physical address. */
 void page_remove_phy(physaddr_t pa)
 {
 	page_info *p = pa2page(pa);
@@ -223,7 +229,7 @@ PDE* init_updir()
 	return updir;
 }
 
-
+/* Handle page fault. */
 void page_fault_handler(TrapFrame* tf)
 {
 	if (tf->error_code & FEC_PR) panic("Page-level protection violation at eip = %x!\n", tf->eip);

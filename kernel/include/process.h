@@ -28,10 +28,6 @@ typedef struct PCB {
 	int sleepTime;
 } PCB;
 
-//void init_PCB();
-//PCB* new_process();
-//void change_to_process(PCB* pcb);
-
 extern PCB idle;
 extern PCB* current;
 extern TSS tss;

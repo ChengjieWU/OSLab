@@ -24,7 +24,8 @@ union CmdByte mode = {
 	.channel      = 0,  // use channel 0
 };
 
-void init_timer() {
+void init_timer() 
+{
 	int counter = PIT_FREQUENCE / HZ;
 	out_byte(PORT_CMD, mode.val);
 	out_byte(PORT_CH_0, counter & 0xFF);         // access low byte
@@ -32,22 +33,26 @@ void init_timer() {
 }
 
 volatile uint32_t time_tick = 0;
-extern PCB *current;
+
 extern void timeChange();
 #define timeStep 10
 extern bool hasBlocked;
 extern void wakeup();
 extern PCB *pcb_blocked_list;
 
-void timer_event() {
+void timer_event()
+{
 	time_tick++;
 	current->cpuTime++;
 	if (hasBlocked) pcb_blocked_list->sleepTime--;
+	/* If sleep time is due, wake up the process. */
 	if (hasBlocked && pcb_blocked_list->sleepTime <= 0) wakeup();
+	/* If timeStep is due, select a ready process to run. */
 	if (current->cpuTime > timeStep) timeChange();
 	//printk("%u\n", time_tick);
 }
 
-volatile uint32_t get_time() {
+volatile uint32_t get_time()
+{
 	return time_tick;
 }

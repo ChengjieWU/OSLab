@@ -38,6 +38,7 @@ void init_PCB()
 	}
 }
 
+/* Allocate a new PCB term. */
 PCB* pcb_alloc()
 {
 	if (pcb_free_list == NULL) return NULL;
@@ -46,6 +47,7 @@ PCB* pcb_alloc()
 	return p;
 }
 
+/* Free a PCB. */
 void pcb_free(PCB *pcb)
 {
 	if (pcb == NULL) panic("Trying to free an empty PCB!\n");
@@ -85,7 +87,8 @@ PCB* pop_ready_list()				//pop the head
 	else 
 		return NULL;
 }
-void add_blocked_list(PCB* pcb, uint32_t t)		//add to tail
+/* Add current process to blocked list according to its sleep time. */
+void add_blocked_list(PCB* pcb, uint32_t t)
 {
 	/*printk("before: ");		//for debug
 	PCB *ta = pcb_blocked_list;
@@ -120,7 +123,6 @@ void add_blocked_list(PCB* pcb, uint32_t t)		//add to tail
 				p = p->next;
 				q = q->next;
 			}
-			//printk("");
 			if (q != NULL) q->sleepTime -= (t - cut);
 			pcb->sleepTime = t - cut;
 			pcb->next = q;
@@ -146,6 +148,7 @@ PCB* pop_blocked_list()				//pop the head
 		return NULL;
 }
 
+/* Create a new process. */
 PCB* new_process()
 {
 	PCB* pcb = pcb_alloc();
@@ -164,6 +167,7 @@ PCB* new_process()
 	return pcb;
 }
 
+/* Load cr3. */
 void load_process_memory(PCB *pcb)
 {
 	PDE* updir = pcb->pgdir;
@@ -173,6 +177,7 @@ void load_process_memory(PCB *pcb)
 	//printk("\n%x\n", cr3.val);
 	write_cr3(&cr3);
 }
+/* Switch trap frames. */
 void change_to_process(PCB* pcb)
 {
 	pcb->state = PROCESS_RUNNING;

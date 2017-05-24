@@ -13,23 +13,29 @@ void page_remove_phy(physaddr_t);
 void add_blocked_list(PCB*, uint32_t);
 PCB* pop_blocked_list();
 
+
 void fork_kernel()
 {
+	/* Add current process to ready list. */
 	add_ready_list(current);
 	
+	/* Create a new process. */
 	PCB* child = new_process();
 	PCB* parent = current;
 	child->parent = parent->pid;
 	PDE* cpdir = child->pgdir;
 	PDE* ppdir = parent->pgdir;
 	
+	/* Copy kernel stack from parent to its new process. */
 	memcpy(child->kernelStackBottom, parent->kernelStackBottom, PAGE_SIZE);
 	
 	child->tf = (void *)((uint32_t)child->kernelStackBottom + ((uint32_t)parent->tf - (uint32_t)parent->kernelStackBottom));
 	
+	/* Set return value of the fork() function. 0 for child and child's pid for parent. */
 	((TrapFrame *)(child->tf))->eax = 0;
 	((TrapFrame *)(parent->tf))->eax = child->pid;
 	
+	/* Deep copy page directory, page table and physical frames. */
 	uint32_t pdir_idx;
 	for (pdir_idx = 0; pdir_idx < KOFFSET / PD_SIZE; pdir_idx++)
 	{
@@ -55,6 +61,7 @@ void fork_kernel()
 		}
 	}
 	
+	/* Select a process in the ready list to run. */
 	PCB* pcb = pop_ready_list();
 	load_process_memory(pcb);
 	change_to_process(pcb);
@@ -69,6 +76,7 @@ void exit_kernel()
 {	
 	PDE* pgdir = current->pgdir;
 	
+	/* Remove all physical frames. */
 	uint32_t pdir_idx;
 	for (pdir_idx = 0; pdir_idx < KOFFSET / PD_SIZE; pdir_idx++)
 	{
@@ -85,8 +93,11 @@ void exit_kernel()
 			page_remove_phy(pa);
 		}
 	}
+	
+	/* Free the PCB. */
 	pcb_free(current);
 	
+	/* Select a process in the ready list to run. */
 	PCB* pcb = pop_ready_list();
 	if (pcb == NULL) panic("\nThere are no processes. Machine stops!\n");
 	load_process_memory(pcb);
@@ -94,6 +105,7 @@ void exit_kernel()
 	
 }
 
+/* Change processes due to CPU time. */
 void timeChange()
 {
 	current->cpuTime = 0;
@@ -102,7 +114,7 @@ void timeChange()
 	load_process_memory(pcb);
 	change_to_process(pcb);
 }
-
+/* Sleep the current process. */
 void sleep_kernel(int hl)
 {
 	current->cpuTime = 0;
@@ -112,7 +124,7 @@ void sleep_kernel(int hl)
 	load_process_memory(pcb);
 	change_to_process(pcb);
 }
-
+/* Wake up the head of the blocked list. */
 void wakeup()
 {
 	PCB *p = pop_blocked_list();

@@ -98,7 +98,10 @@ void game_main(void)
 {
 	//fork();
 	//printf("I'm process No.%d\n", getpid());
-	printf("We are now in game!\n");
+	printf("We are now in game!\n\n");
+	printf("***********************************\n");
+	printf("README:\nSpace --- pause or start\nQ --- quit\nLeft Arrow --- move left\nRight Arrow --- move right\n\n");
+	printf("***********************************\n");
 	init_Game();
 	fork();
 	if (getpid() == 1) 
