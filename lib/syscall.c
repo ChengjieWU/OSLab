@@ -1,6 +1,8 @@
 #include "sys/syscall.h"
 #include "types.h"
 
+#include "semaphore.h"
+
 static inline int //__attribute__((__noinline__))
 syscall(int id, ...) {
 	int ret;
@@ -44,4 +46,20 @@ int exit() {
 
 int sleep(int t) {
 	return syscall(SYS_wait4, t);
+}
+
+semaphore *sem_open(int t) {
+	return (semaphore *)syscall(SYS_sem_open, t);
+}
+
+int sem_close(semaphore *sem) {
+	return syscall(SYS_sem_close, sem);
+}
+
+int sem_wait(semaphore *sem) {
+	return syscall(SYS_sem_wait, sem);
+}
+
+int sem_post(semaphore *sem) {
+	return syscall(SYS_sem_post, sem);
 }

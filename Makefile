@@ -4,12 +4,13 @@ BIN_DIR := bin
 BOOT   := $(BIN_DIR)/boot.bin
 KERNEL := $(BIN_DIR)/kernel.bin
 TEST   := $(BIN_DIR)/test.bin
+SEM	   := $(BIN_DIR)/sem.bin
 GAME   := $(BIN_DIR)/game.bin
 PROGRAM := $(BIN_DIR)/program.bin
 IMAGE  := disk.bin
 
 # Could be switched between GAME and TEST.
-TARGET := $(GAME)
+TARGET := $(SEM)
 
 CC      := gcc
 LD      := ld
@@ -44,16 +45,19 @@ LIB_DIR        := lib
 BOOT_DIR       := boot
 KERNEL_DIR     := kernel
 TEST_DIR       := test
+SEM_DIR		   := sem
 GAME_DIR	   := game
 OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
 OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
 OBJ_GAME_DIR   := $(OBJ_DIR)/$(GAME_DIR)
 OBJ_TEST_DIR   := $(OBJ_DIR)/$(TEST_DIR)
+OBJ_SEM_DIR   := $(OBJ_DIR)/$(SEM_DIR)
 
 LD_SCRIPT := $(shell find $(KERNEL_DIR) -name "*.ld")
 GAME_LD_SCRIPT	 := $(shell find $(GAME_DIR) -name "*.ld")
 TEST_LD_SCRIPT	 := $(shell find $(TEST_DIR) -name "*.ld")
+SEM_LD_SCRIPT	 := $(shell find $(SEM_DIR) -name "*.ld")
 
 LIB_C := $(wildcard $(LIB_DIR)/*.c)
 LIB_O := $(LIB_C:%.c=$(OBJ_DIR)/%.o)
@@ -70,6 +74,9 @@ KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 
 GAME_C := $(shell find $(GAME_DIR) -name "*.c")
 GAME_O := $(GAME_C:%.c=$(OBJ_DIR)/%.o)
+
+SEM_C := $(shell find $(SEM_DIR) -name "*.c")
+SEM_O := $(SEM_C:%.c=$(OBJ_DIR)/%.o)
 
 TEST_C := $(shell find $(TEST_DIR) -name "*.c")
 TEST_O := $(TEST_C:%.c=$(OBJ_DIR)/%.o)
@@ -142,6 +149,17 @@ $(OBJ_TEST_DIR)/%.o: $(TEST_DIR)/%.c
 	@echo cc $< -o $@
 	@$(CC) $(CFLAGS) -I ./test/include $< -o $@
 	
+	
+$(SEM): $(SEM_LD_SCRIPT)
+$(SEM): $(SEM_O) $(LIB_O)
+	@mkdir -p $(BIN_DIR)
+	@echo ld -o $@
+	@$(LD) -m elf_i386 -T $(SEM_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+$(OBJ_SEM_DIR)/%.o: $(SEM_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)/$(dir $<)
+	@echo cc $< -o $@
+	@$(CC) $(CFLAGS) -I ./sem/include $< -o $@
 
 	
 

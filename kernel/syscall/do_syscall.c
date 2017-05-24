@@ -2,6 +2,8 @@
 #include "irq.h"
 #include "sys/syscall.h"
 
+#include "semaphore.h"
+
 void serial_printc(char);
 void load_vmem(const uint8_t *, int, int);
 void fullScreen(const unsigned char*);
@@ -11,6 +13,10 @@ void fork_kernel();
 int get_pid();
 void exit_kernel();
 void sleep_kernel(uint32_t);
+semaphore *sem_open_kernel(int);
+int sem_close_kernel(semaphore *);
+int sem_wait_kernel(semaphore *);
+int sem_post_kernel(semaphore *);
 
 /*
 uint32_t mm_brk(uint32_t);
@@ -93,6 +99,10 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_getpid: tf->eax = get_pid(); break;
 		case SYS_exit: exit_kernel(); break;
 		case SYS_wait4: sleep_kernel((int)tf->ebx); break;
+		case SYS_sem_open: tf->eax = (int)sem_open_kernel((int)tf->ebx); break;
+		case SYS_sem_close: tf->eax = sem_close_kernel((semaphore *)tf->ebx); break;
+		case SYS_sem_wait: tf->eax = sem_wait_kernel((semaphore *)tf->ebx); break;
+		case SYS_sem_post: tf->eax = sem_post_kernel((semaphore *)tf->ebx); break;
 		//case SYS_read: sys_read(tf); break;
 		//case SYS_open: sys_open(tf); break;
 		//case SYS_lseek: sys_lseek(tf); break;

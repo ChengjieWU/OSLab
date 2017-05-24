@@ -111,6 +111,7 @@ void timeChange()
 	current->cpuTime = 0;
 	add_ready_list(current);
 	PCB* pcb = pop_ready_list();
+	if (pcb == NULL) panic("\nThere are no processes. Machine stops!\n");
 	load_process_memory(pcb);
 	change_to_process(pcb);
 }
@@ -130,4 +131,13 @@ void wakeup()
 	PCB *p = pop_blocked_list();
 	p->sleepTime = 0;
 	add_ready_list(p);
+}
+
+void dropRun()
+{
+	current->cpuTime = 0;
+	PCB *pcb = pop_ready_list();
+	if (pcb == NULL) panic("\nThere are no processes. Machine stops!\n");
+	load_process_memory(pcb);
+	change_to_process(pcb);
 }

@@ -170,3 +170,7 @@
 #define SYS_keyboard 185
 #define SYS_loadVideo 186
 #define SYS_fullVideo 187
+#define SYS_sem_open 188
+#define SYS_sem_close 189
+#define SYS_sem_wait 190
+#define SYS_sem_post 191

@@ -36,6 +36,7 @@ void change_to_process(PCB*);
 PCB* new_process();
 void load_process_memory(PCB *pcb);
 PCB* pop_ready_list();
+void init_Sem();
 
 void init();
 void first_loader();
@@ -89,7 +90,8 @@ void init()
 	
 	printk("Initialize process control block...\n");
 	init_PCB();
-	
+	printk("Initialize semaphores...\n");
+	init_Sem();
 	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
 	
 	first_loader();
