@@ -48,6 +48,10 @@ int sleep(int t) {
 	return syscall(SYS_wait4, t);
 }
 
+int drop_exec() {
+	return syscall(SYS_drop_exec);
+}
+
 semaphore *sem_open(int t) {
 	return (semaphore *)syscall(SYS_sem_open, t);
 }
@@ -62,6 +66,14 @@ int sem_wait(semaphore *sem) {
 
 int sem_post(semaphore *sem) {
 	return syscall(SYS_sem_post, sem);
+}
+
+int sem_init(semaphore *sem, int value) {
+	return syscall(SYS_sem_init, sem, value);
+}
+
+int sem_destroy(semaphore *sem) {
+	return syscall(SYS_sem_destroy, sem);
 }
 
 int wthread_create(void *func, void *arg) {

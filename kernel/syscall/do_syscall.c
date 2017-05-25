@@ -13,10 +13,13 @@ void fork_kernel();
 int get_pid();
 void exit_kernel();
 void sleep_kernel(uint32_t);
+void dropRun();
 semaphore *sem_open_kernel(int);
 int sem_close_kernel(semaphore *);
 int sem_wait_kernel(semaphore *);
 int sem_post_kernel(semaphore *);
+int sem_init_kernel(semaphore *, int);
+int sem_destroy_kernel(semaphore *);
 void wthread_create_kernel(void *, void *);
 void wthread_exit_kernel();
 
@@ -101,10 +104,13 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_getpid: tf->eax = get_pid(); break;
 		case SYS_exit: exit_kernel(); break;
 		case SYS_wait4: sleep_kernel((int)tf->ebx); break;
+		case SYS_drop_exec: dropRun(); break;
 		case SYS_sem_open: tf->eax = (int)sem_open_kernel((int)tf->ebx); break;
 		case SYS_sem_close: tf->eax = sem_close_kernel((semaphore *)tf->ebx); break;
 		case SYS_sem_wait: tf->eax = sem_wait_kernel((semaphore *)tf->ebx); break;
 		case SYS_sem_post: tf->eax = sem_post_kernel((semaphore *)tf->ebx); break;
+		case SYS_sem_init: tf->eax = sem_init_kernel((semaphore *)tf->ebx, (int)tf->ecx); break;
+		case SYS_sem_destroy: tf->eax = sem_destroy_kernel((semaphore *)tf->ebx); break;
 		case SYS_wthread_create: wthread_create_kernel((void *)tf->ebx, (void *)tf->ecx); break;
 		case SYS_wthread_exit: wthread_exit_kernel(); break;
 		//case SYS_read: sys_read(tf); break;

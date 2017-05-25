@@ -13,5 +13,12 @@ typedef struct semaphore {
 	int cited;
 } semaphore;
 
+semaphore *sem_open(int);
+int sem_close(semaphore *);
+int sem_wait(semaphore *);
+int sem_post(semaphore *);
+int sem_init(semaphore *, int);
+int sem_destroy(semaphore *);
+
 
 #endif

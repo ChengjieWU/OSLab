@@ -6,6 +6,8 @@ void add_ready_list(PCB* pcb);
 
 semaphore sem_pool[num_Sem];
 
+/****** processes in wait_queue need a status too! ******/
+
 void init_Sem()
 {
 	int i;
@@ -18,12 +20,30 @@ void init_Sem()
 	}
 }
 
+int sem_init_kernel(semaphore *sem, int value)
+{
+	sem->value = value;
+	sem->wait_queue = NULL;
+	sem->cited = 1;
+	sem->empty = false;
+	
+	/* The followings are not used in unnamed semaphore. */
+	sem->id = -1;
+	return 0;
+}
+
+int sem_destroy_kernel(semaphore *sem)
+{
+	sem->empty = true;
+	return 0;
+}
+
 semaphore *sem_open_kernel(int id)
 {	
 	if (sem_pool[id].empty == true) sem_pool[id].empty = false;
 	sem_pool[id].cited++;
 	
-	/****** Currently, the initial value is set to 1, and it needs modifying. ******/
+	/****** Currently, the initial value is set to 3, and it needs modifying. ******/
 	sem_pool[id].value = 3;
 	
 	return &sem_pool[id];

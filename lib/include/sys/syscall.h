@@ -176,3 +176,6 @@
 #define SYS_sem_post 191
 #define SYS_wthread_create 192
 #define SYS_wthread_exit 193
+#define SYS_sem_init 194
+#define SYS_sem_destroy 195
+#define SYS_drop_exec 196
