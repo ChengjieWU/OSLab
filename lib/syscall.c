@@ -63,3 +63,11 @@ int sem_wait(semaphore *sem) {
 int sem_post(semaphore *sem) {
 	return syscall(SYS_sem_post, sem);
 }
+
+int wthread_create(void *func, void *arg) {
+	return syscall(SYS_wthread_create, func, arg);
+}
+
+int wthread_exit() {
+	return syscall(SYS_wthread_exit);
+}

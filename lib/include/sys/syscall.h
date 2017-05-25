@@ -174,3 +174,5 @@
 #define SYS_sem_close 189
 #define SYS_sem_wait 190
 #define SYS_sem_post 191
+#define SYS_wthread_create 192
+#define SYS_wthread_exit 193
