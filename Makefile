@@ -10,7 +10,7 @@ PROGRAM := $(BIN_DIR)/program.bin
 IMAGE  := disk.bin
 
 # Could be switched between GAME and TEST.
-TARGET := $(SEM)
+TARGET := $(TEST)
 
 CC      := gcc
 LD      := ld

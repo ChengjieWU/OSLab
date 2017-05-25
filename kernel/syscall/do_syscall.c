@@ -17,6 +17,7 @@ semaphore *sem_open_kernel(int);
 int sem_close_kernel(semaphore *);
 int sem_wait_kernel(semaphore *);
 int sem_post_kernel(semaphore *);
+void wthread_create();
 
 /*
 uint32_t mm_brk(uint32_t);
@@ -95,7 +96,7 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_fullVideo: fullScreen((const unsigned char*)tf->ebx); break;
 		case SYS_time: tf->eax = get_time(); break;
 		case SYS_keyboard: tf->eax = handle_keys(); break;
-		case SYS_fork: fork_kernel(); break;
+		case SYS_fork: wthread_create(); break;
 		case SYS_getpid: tf->eax = get_pid(); break;
 		case SYS_exit: exit_kernel(); break;
 		case SYS_wait4: sleep_kernel((int)tf->ebx); break;

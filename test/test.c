@@ -2,6 +2,7 @@
 #include "printf.h"
 #include "proc.h"
 
+/*
 void test_main()
 {
 	fork();
@@ -32,6 +33,26 @@ void test_main()
 			sleep(8000);
 			printf("************\n");
 		}
+	}
+	exit();
+}*/
+
+
+int share;
+
+void test_main()
+{
+	share = 0;
+	printf("%d\n", share);
+	int t = fork();
+	if (t == 1) {
+		printf("%d\n", share);
+		sleep(100);
+		printf("%d\n", share);
+	}
+	else {
+		share = 1;
+		while(1);
 	}
 	exit();
 }

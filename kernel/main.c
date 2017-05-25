@@ -9,7 +9,7 @@
 #include "memory.h"
 
 /* Kernel stack starts at 0xc1000000 (NOT end of phy-address), which is set in boot/start.S */
-#define USER_STACK 0xc0000000
+#define USER_STACK KOFFSET
 
 #define GAME_OFFSET_IN_DISK KMEM
 

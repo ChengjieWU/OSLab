@@ -6,7 +6,8 @@
 
 #ifdef IA32_PAGE
 
-#define KOFFSET 0xC0000000
+#define KOFFSET 0xC0000000			/* This is not the only definition. in boot/main.c */
+#define USER_STACK_TOP 0xB0000000
 
 CR3* get_kcr3();
 PDE* get_kpdir();

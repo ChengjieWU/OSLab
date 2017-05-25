@@ -9,7 +9,7 @@
 #include "boot.h"
 
 #define SECTSIZE 512
-#define KOFFSET 0xC0000000
+#define KOFFSET 0xC0000000			/* This is not the only definition. in kernel/include/memory.h*/
 
 void readseg(unsigned char *, int, int);
 
