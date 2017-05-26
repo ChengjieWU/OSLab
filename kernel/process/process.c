@@ -183,6 +183,13 @@ void change_to_process(PCB* pcb)
 	pcb->state = PROCESS_RUNNING;
 	current = pcb;
 	tss.esp0 = (uint32_t)current->tf;
+	/******/       
+	/*printk("current process is No.%d\n", current->pid);
+	PCB* p = pcb_ready_list;
+	printk("\tready list: ");
+	for (; p != NULL; p = p->next) printk("%d ", p->pid);
+	printk("\n");*/
+	
 	//printk("tss.esp0 = %x\n", tss.esp0);
 }
 
