@@ -14,6 +14,9 @@ void page_remove_phy(physaddr_t);
 void add_blocked_list(PCB*, uint32_t);
 PCB* pop_blocked_list();
 
+/* These two are used to implement wthread_join. */
+int sem_init_kernel(semaphore *, int);
+int sem_post_kernel(semaphore *);
 
 void fork_kernel()
 {
@@ -99,6 +102,8 @@ void wthread_create_kernel(void *func, void *arg, wthread *thread)
 	uint32_t pdir_idx;
 	
 	/* THREAD: Shallow copy page directory, page table and physical frames of other components.*/
+	/* In my implementation, thread won't increment the page cited number. */
+	/* Any illegal operations, such as the main process exiting first, will lead to unexpected result. */
 	for (pdir_idx = 0; pdir_idx < USER_STACK_TOP / PD_SIZE; pdir_idx++)
 	{
 		cpdir[pdir_idx] = ppdir[pdir_idx];

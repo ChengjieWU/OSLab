@@ -14,7 +14,7 @@ int get_pid();
 void exit_kernel();
 void sleep_kernel(uint32_t);
 void drop_exec_kernel();
-semaphore *sem_open_kernel(int);
+semaphore *sem_open_kernel(int, int);
 int sem_close_kernel(semaphore *);
 int sem_wait_kernel(semaphore *);
 int sem_post_kernel(semaphore *);
@@ -105,7 +105,7 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_exit: exit_kernel(); break;
 		case SYS_wait4: sleep_kernel((int)tf->ebx); break;
 		case SYS_drop_exec: drop_exec_kernel(); break;
-		case SYS_sem_open: tf->eax = (int)sem_open_kernel((int)tf->ebx); break;
+		case SYS_sem_open: tf->eax = (int)sem_open_kernel((int)tf->ebx, (int)tf->ecx); break;
 		case SYS_sem_close: tf->eax = sem_close_kernel((semaphore *)tf->ebx); break;
 		case SYS_sem_wait: tf->eax = sem_wait_kernel((semaphore *)tf->ebx); break;
 		case SYS_sem_post: tf->eax = sem_post_kernel((semaphore *)tf->ebx); break;

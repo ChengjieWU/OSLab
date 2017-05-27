@@ -9,19 +9,16 @@ typedef struct semaphore {
 	int value;
 	int id;
 	void *wait_queue;
-	bool empty;
+	bool use;
 	int cited;
 } semaphore;
 
-semaphore *sem_open(int);
+semaphore *sem_open(int, int);
 int sem_close(semaphore *);
 int sem_wait(semaphore *);
 int sem_post(semaphore *);
 int sem_init(semaphore *, int);
 int sem_destroy(semaphore *);
-
-int sem_init_kernel(semaphore *, int);
-int sem_post_kernel(semaphore *);
 
 
 #endif

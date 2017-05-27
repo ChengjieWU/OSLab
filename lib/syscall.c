@@ -52,8 +52,8 @@ int drop_exec() {
 	return syscall(SYS_drop_exec);
 }
 
-semaphore *sem_open(int t) {
-	return (semaphore *)syscall(SYS_sem_open, t);
+semaphore *sem_open(int t, int value) {
+	return (semaphore *)syscall(SYS_sem_open, t, value);
 }
 
 int sem_close(semaphore *sem) {

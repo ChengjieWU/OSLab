@@ -6,12 +6,16 @@
 #include "proc.h"
 #include "wthread.h"
 
-//#define named
-//#define unnamed
-#define proacon
+/* There are 2 test cases in this file.*/
+
+//#define compete_for_limited_resource_test
+#define producer_and_consumer
 
 
-#ifdef proacon
+
+/* TEST CASE 1: producer and consumer */
+
+#ifdef producer_and_consumer
 
 const int N = 100;
 const int T = 100;
@@ -76,83 +80,57 @@ void test_main()
 	wthread_create(&p2, &producer, (void *)2);
 	wthread_create(&c1, &consumer, (void *)1);
 	wthread_create(&c2, &consumer, (void *)2);
-	/*while(1) {
-		drop_exec();
-	}*/
 	wthread_join(&p1);
 	wthread_join(&p2);
 	wthread_join(&c1);
 	wthread_join(&c2);
+	sem_destroy(&mutex);
+	sem_destroy(&empty);
+	sem_destroy(&full);
 	exit();
 }
 #endif
 
 
 
-#ifdef named
-void test_main()
-{
-	semaphore *sem = sem_open(0);
-	
-	fork();
-	fork();
-	fork();
-	fork();
-	
-	int t = getpid();
-	
-	int i;
-	
-	for (i = 0; i < 100000; i++)
-	{
-		sem_wait(sem);
-		if (i == 99999) printf("%d OK!\n", t);
-		sem_post(sem);
-	}
-	exit();
-}
-#endif
+/* TEST CASE 2: multiple processes or threads compete for limited resources */
 
+#ifdef compete_for_limited_resource_test
 
-#ifdef unnamed
 semaphore sem;
-
+wthread T[16];
 void create(void* arg)
 {
 	int t = getpid();
 	int i;
 	for (i = 0; i < 10000; i++) {
-		//printf("%d locks\n", t);
 		sem_wait(&sem);
-		if (i == 9999) printf("%d OK!\n", t);
+		if (i == 9999) printf("Thread No.%d OK!\n", t);
 		sem_post(&sem);
-		//printf("%d unlocks\n", t);
 	}
 	wthread_exit();
 }
-
 void test_main()
 {
-	sem_init(&sem, 1);
-	wthread_create(&create, (void *)1);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	wthread_create(&create, (void *)2);
-	while(1) {
-		drop_exec();
+	printf("*******************************************************\n");
+	printf("Test unnamed semaphores between threads:\n");
+	sem_init(&sem, 8);
+	int i;
+	for (i = 0; i < 16; i++) wthread_create(&T[i], &create, (void *)i);
+	for (i = 0; i < 16; i++) wthread_join(&T[i]);
+	sem_destroy(&sem);
+	printf("*********************PARTING LINE**********************\n");
+	printf("Test named semaphores between processes:\n");
+	semaphore *sem = sem_open(0, 3);
+	for (i = 0; i < 4; i++) fork();
+	int t = getpid();
+	for (i = 0; i < 10000; i++)
+	{
+		sem_wait(sem);
+		if (i == 9999) printf("Process No.%d OK!\n", t);
+		sem_post(sem);
 	}
 	exit();
 }
+
 #endif
