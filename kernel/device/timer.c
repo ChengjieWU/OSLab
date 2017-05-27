@@ -35,7 +35,7 @@ void init_timer()
 volatile uint32_t time_tick = 0;
 
 extern void timeChange();
-#define timeStep 1
+#define timeStep 3
 extern bool hasBlocked;
 extern void wakeup();
 extern PCB *pcb_blocked_list;

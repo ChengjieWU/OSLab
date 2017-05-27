@@ -2,6 +2,7 @@
 #include "string.h"
 #include "irq.h"
 #include "memory.h"
+#include "wthread.h"
 
 PCB* new_process();
 void change_to_process(PCB *);
@@ -67,7 +68,7 @@ void fork_kernel()
 	change_to_process(pcb);
 }
 
-void wthread_create_kernel(void *func, void *arg)
+void wthread_create_kernel(void *func, void *arg, wthread *thread)
 {
 	/* Add current process to ready list. */
 	add_ready_list(current);
@@ -90,6 +91,10 @@ void wthread_create_kernel(void *func, void *arg)
 	
 	/* THREAD: Set %eip to the objective function. */
 	((TrapFrame *)(child->tf))->eip = (uint32_t)func;
+	
+	/* THREAD: This deals with storing information of threads. */
+	child->thread = thread;
+	sem_init_kernel(&child->thread->has_exited, 0);
 	
 	uint32_t pdir_idx;
 	
@@ -204,6 +209,10 @@ void wthread_exit_kernel()
 			page_remove_phy(pa);
 		}
 	}
+	
+	/* To tell other threads that I have exited. */
+	sem_post_kernel(&current->thread->has_exited);
+	
 	/* Free the PCB. */
 	pcb_free(current);
 	
@@ -247,6 +256,7 @@ void wakeup()
 void dropRun()
 {
 	current->cpuTime = 0;
+	current->state = PROCESS_SEMAPHORE;
 	PCB *pcb = pop_ready_list();
 	if (pcb == NULL) panic("\nThere are no processes. Machine stops!\n");
 	load_process_memory(pcb);

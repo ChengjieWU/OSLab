@@ -2,6 +2,7 @@
 #define __PROCESS_H__
 
 #include "x86.h"
+#include "wthread.h"
 #define KERNEL_STACK_SIZE 1
 #define PCB_NUM 64					/* The maximum number of PCB terms is 64. */
 
@@ -11,6 +12,7 @@ enum STATE {
     PROCESS_READY,
     PROCESS_BLOCKED,
     PROCESS_DEAD,
+    PROCESS_SEMAPHORE
 };
 
 
@@ -26,6 +28,7 @@ typedef struct PCB {
 	PDE* pgdir;
 	uint32_t cpuTime;
 	int sleepTime;
+	wthread *thread;
 } PCB;
 
 extern PCB idle;

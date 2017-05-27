@@ -64,7 +64,6 @@ int sem_wait_kernel(semaphore *sem)
 	else {
 		current->next = (PCB *)sem->wait_queue;
 		sem->wait_queue = (void *)current;
-		
 		dropRun();
 		return 0;
 	}

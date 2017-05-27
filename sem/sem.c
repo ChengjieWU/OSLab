@@ -1,10 +1,10 @@
 #include "types.h"
 #include "printf.h"
-#include "proc.h"
-#include "wthread.h"
-#include "semaphore.h"
 #include "time.h"
 #include "string.h"
+
+#include "proc.h"
+#include "wthread.h"
 
 //#define named
 //#define unnamed
@@ -21,6 +21,8 @@ int count;
 semaphore mutex;
 semaphore empty;
 semaphore full;
+wthread p1, p2;
+wthread c1, c2;
 
 int produce_item()
 {
@@ -70,13 +72,18 @@ void test_main()
 	sem_init(&mutex, 1);
 	sem_init(&empty, N);
 	sem_init(&full, 0);
-	wthread_create(&producer, (void *)1);
-	wthread_create(&producer, (void *)2);
-	wthread_create(&consumer, (void *)1);
-	wthread_create(&consumer, (void *)2);
-	while(1) {
+	wthread_create(&p1, &producer, (void *)1);
+	wthread_create(&p2, &producer, (void *)2);
+	wthread_create(&c1, &consumer, (void *)1);
+	wthread_create(&c2, &consumer, (void *)2);
+	/*while(1) {
 		drop_exec();
-	}
+	}*/
+	wthread_join(&p1);
+	wthread_join(&p2);
+	wthread_join(&c1);
+	wthread_join(&c2);
+	exit();
 }
 #endif
 

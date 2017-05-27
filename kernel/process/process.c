@@ -33,6 +33,7 @@ void init_PCB()
 		pcb_pool[i].pgdir = NULL;
 		pcb_pool[i].cpuTime = 0;
 		pcb_pool[i].sleepTime = 0;
+		pcb_pool[i].thread = NULL;
 		pcb_pool[i].next = pcb_free_list;
 		pcb_free_list = &pcb_pool[i];
 	}
@@ -59,6 +60,7 @@ void pcb_free(PCB *pcb)
 	pcb->pgdir = NULL;
 	pcb->cpuTime = 0;
 	pcb->sleepTime = 0;
+	pcb->thread = NULL;
 	pcb->next = pcb_free_list;
 	pcb_free_list = pcb;
 }
@@ -183,7 +185,7 @@ void change_to_process(PCB* pcb)
 	pcb->state = PROCESS_RUNNING;
 	current = pcb;
 	tss.esp0 = (uint32_t)current->tf;
-	/******/       
+	/*** for debug only ***/       
 	/*printk("current process is No.%d\n", current->pid);
 	PCB* p = pcb_ready_list;
 	printk("\tready list: ");

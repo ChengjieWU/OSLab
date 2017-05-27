@@ -20,5 +20,8 @@ int sem_post(semaphore *);
 int sem_init(semaphore *, int);
 int sem_destroy(semaphore *);
 
+int sem_init_kernel(semaphore *, int);
+int sem_post_kernel(semaphore *);
+
 
 #endif

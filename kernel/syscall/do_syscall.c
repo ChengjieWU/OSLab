@@ -2,7 +2,7 @@
 #include "irq.h"
 #include "sys/syscall.h"
 
-#include "semaphore.h"
+#include "wthread.h"
 
 void serial_printc(char);
 void load_vmem(const uint8_t *, int, int);
@@ -20,7 +20,7 @@ int sem_wait_kernel(semaphore *);
 int sem_post_kernel(semaphore *);
 int sem_init_kernel(semaphore *, int);
 int sem_destroy_kernel(semaphore *);
-void wthread_create_kernel(void *, void *);
+void wthread_create_kernel(void *, void *, wthread *);
 void wthread_exit_kernel();
 
 /*
@@ -111,7 +111,7 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_sem_post: tf->eax = sem_post_kernel((semaphore *)tf->ebx); break;
 		case SYS_sem_init: tf->eax = sem_init_kernel((semaphore *)tf->ebx, (int)tf->ecx); break;
 		case SYS_sem_destroy: tf->eax = sem_destroy_kernel((semaphore *)tf->ebx); break;
-		case SYS_wthread_create: wthread_create_kernel((void *)tf->ebx, (void *)tf->ecx); break;
+		case SYS_wthread_create: wthread_create_kernel((void *)tf->ebx, (void *)tf->ecx, (wthread *)tf->edx); break;
 		case SYS_wthread_exit: wthread_exit_kernel(); break;
 		//case SYS_read: sys_read(tf); break;
 		//case SYS_open: sys_open(tf); break;

@@ -1,7 +1,7 @@
 #include "sys/syscall.h"
 #include "types.h"
 
-#include "semaphore.h"
+#include "wthread.h"
 
 static inline int //__attribute__((__noinline__))
 syscall(int id, ...) {
@@ -76,8 +76,8 @@ int sem_destroy(semaphore *sem) {
 	return syscall(SYS_sem_destroy, sem);
 }
 
-int wthread_create(void *func, void *arg) {
-	return syscall(SYS_wthread_create, func, arg);
+int wthread_create(wthread *thread, void *func, void *arg) {
+	return syscall(SYS_wthread_create, func, arg, thread);
 }
 
 int wthread_exit() {

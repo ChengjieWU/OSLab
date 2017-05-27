@@ -1,8 +1,16 @@
 #ifndef __WTHREAD_H__
 #define __WTHREAD_H__
 
-int wthread_create(void *, void *);
+#include "semaphore.h"
+
+typedef struct wthread {
+	semaphore has_exited;
+} wthread;
+
+int wthread_create(wthread *, void *, void *);
 int wthread_exit();
+void wthread_join(wthread *);
+
 
 
 #endif
