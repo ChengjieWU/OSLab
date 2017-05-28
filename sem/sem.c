@@ -6,10 +6,16 @@
 #include "proc.h"
 #include "wthread.h"
 
+/**************************README!!!******************************/
+
 /* There are 2 test cases in this file.*/
+/* Switch between the 2 test cases using comment!!! */
 
 //#define compete_for_limited_resource_test
 #define producer_and_consumer
+
+/*****************************************************************/
+
 
 
 
@@ -17,57 +23,66 @@
 
 #ifdef producer_and_consumer
 
-const int N = 100;
-const int T = 100;
-int buf[1000];
+/* Parameters */
+#define T 10
+#define N 4
+#define PN 2
+#define CN 2
+
+int buf[N];
 int count;
 
 semaphore mutex;
 semaphore empty;
 semaphore full;
-wthread p1, p2;
-wthread c1, c2;
 
-int produce_item()
+wthread p[PN];
+wthread c[CN];
+
+/* Halt funciton is used to make the whole process slower. */
+void halt()
 {
-	buf[count] = count;
-	count++;
+	int i;
+	for (i = 0; i < 0x01ffffff; i++);
+}
+int produce_item(int i)
+{
+	halt();
+	buf[count++] = i;
 	return buf[count - 1];
 }
-
 int consume_item()
 {
+	halt();
 	return buf[--count];
 }
-
+/* Producer thread. */
 void producer(void *arg)
 {
-	int i = T;
-	while(i--) {
+	int i;
+	for (i = 0; i < T; i++) {
 		sem_wait(&empty);
 		sem_wait(&mutex);
-		printf("producer: %d produce %d\n", (int)arg, produce_item());
+		printf("\033[1;30;47mProducer No.\033[1;31;47m%d\033[1;30;47m puts data No.\033[1;31;47m%d\033[1;30;47m into the buffer\033[0m\n", (int)arg, produce_item(PN * i + (int)arg));
 		sem_post(&mutex);
 		sem_post(&full);
-		drop_exec();
 	}
 	wthread_exit();
 }
-
+/* Consumer thread. */
 void consumer(void *arg)
 {
-	int i = T;
-	while(i--) {
+	int i;
+	for (i = 0; i < T; i++) {
 		sem_wait(&full);
 		sem_wait(&mutex);
-		printf("consumer: %d consume %d\n", (int)arg, consume_item());
+		printf("\t\033[1;34;47mConsumer No.\033[1;31;47m%d\033[1;34;47m withdraws data No.\033[1;31;47m%d\033[1;34;47m from the buffer\033[0m\n", (int)arg, consume_item());
 		sem_post(&mutex);
 		sem_post(&empty);
-		drop_exec();
 	}
 	wthread_exit();
 }
-
+/* Main process. */
 void test_main()
 {
 	count = 0;
@@ -76,17 +91,25 @@ void test_main()
 	sem_init(&mutex, 1);
 	sem_init(&empty, N);
 	sem_init(&full, 0);
-	wthread_create(&p1, &producer, (void *)1);
-	wthread_create(&p2, &producer, (void *)2);
-	wthread_create(&c1, &consumer, (void *)1);
-	wthread_create(&c2, &consumer, (void *)2);
-	wthread_join(&p1);
-	wthread_join(&p2);
-	wthread_join(&c1);
-	wthread_join(&c2);
+	
+	int i;
+	for (i = 0; i < PN; i++) {
+		wthread_create(&p[i], &producer, (void *)i);
+	}
+	for (i = 0; i < CN; i++) {
+		wthread_create(&c[i], &consumer, (void *)i);
+	}
+	for (i = 0; i < PN; i++) {
+		wthread_join(&p[i]);
+	}
+	for (i = 0; i < CN; i++) {
+		wthread_join(&c[i]);
+	}
+	
 	sem_destroy(&mutex);
 	sem_destroy(&empty);
 	sem_destroy(&full);
+	
 	exit();
 }
 #endif
@@ -119,6 +142,7 @@ void test_main()
 	for (i = 0; i < 16; i++) wthread_create(&T[i], &create, (void *)i);
 	for (i = 0; i < 16; i++) wthread_join(&T[i]);
 	sem_destroy(&sem);
+	
 	printf("*********************PARTING LINE**********************\n");
 	printf("Test named semaphores between processes:\n");
 	semaphore *sem = sem_open(0, 3);
@@ -130,6 +154,7 @@ void test_main()
 		if (i == 9999) printf("Process No.%d OK!\n", t);
 		sem_post(sem);
 	}
+	
 	exit();
 }
 
