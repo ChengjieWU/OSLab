@@ -1,4 +1,4 @@
-/* start.S的主要功能是切换在实模式工作的处理器到32位保护模式。为此需要设置正确的
+/* boot.S的主要功能是切换在实模式工作的处理器到32位保护模式。为此需要设置正确的
  * GDT、段寄存器和CR0寄存器。C语言代码的主要工作是将磁盘上的内容装载到内存中去。
  * 磁盘镜像的结构如下：
 	 +-----------+------------------.        .-----------------+
@@ -10,6 +10,7 @@
 
 #define SECTSIZE 512
 #define KOFFSET 0xC0000000			/* This is not the only definition. in kernel/include/memory.h*/
+#define ELF_OFFSET_IN_DISK 512		/* This is not the only definition. in kernel/include/memory.h*/
 
 void readseg(unsigned char *, int, int);
 
@@ -24,23 +25,24 @@ bootmain(void) {
 	elf = (struct ELFHeader*)0x8000;
 
 	/* 读入ELF文件头 */
-	readseg((unsigned char*)elf, 4096, 0);
+	readseg((unsigned char*)elf, 4096, ELF_OFFSET_IN_DISK);
 
 	/* 把每个program segement依次读入内存 */
 	ph = (struct ProgramHeader*)((char *)elf + elf->phoff);
 	eph = ph + elf->phnum;
 	for(; ph < eph; ph ++) {
 		pa = (unsigned char*)(ph->paddr - KOFFSET); /* 获取物理地址 */
-		readseg(pa, ph->filesz, ph->off); /* 读入数据 */
+		readseg(pa, ph->filesz, ph->off + ELF_OFFSET_IN_DISK); /* 读入数据 */
 		for (i = pa + ph->filesz; i < pa + ph->memsz; *i ++ = 0);
 	}
 
 	((void(*)(void))(elf->entry - KOFFSET))();
 }
 
+/* 等待磁盘完毕 */
 void
 waitdisk(void) {
-	while((in_byte(0x1F7) & 0xC0) != 0x40); /* 等待磁盘完毕 */
+	while((in_byte(0x1F7) & 0xC0) != 0x40);
 }
 
 /* 读磁盘的一个扇区 */

@@ -19,14 +19,13 @@ void readsect(void *dst, int offset) {
 
 	waitdisk();
 
-	//insl(0x1f0, dst, SECTSIZE/4);	//read a sector
-	//	this part does the same thing
 	int i;
 	for(i = 0; i < SECTSIZE / 4; i ++) {
 		((int *)dst)[i] = in_long(0x1f0);
 	}
 }
 
+/* Boot block is already taken into account. */
 void readseg(unsigned char *pa, int count, int offset) {
 	unsigned char *epa;
 	epa = pa + count;

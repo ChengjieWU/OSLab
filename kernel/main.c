@@ -11,7 +11,9 @@
 /* Kernel stack starts at 0xc1000000 (NOT end of phy-address), which is set in boot/start.S */
 #define USER_STACK KOFFSET
 
-#define GAME_OFFSET_IN_DISK KMEM
+/******************            ************************/
+#define ELF_OFFSET_IN_DISK 512
+#define GAME_OFFSET_IN_DISK KMEM + ELF_OFFSET_IN_DISK
 
 void readseg(unsigned char*,int,int);
 
@@ -41,6 +43,13 @@ void init_Sem();
 void init();
 void first_loader();
 void printk_test();
+
+
+
+void init_fs();
+
+
+
 
 int main()
 {
@@ -93,6 +102,8 @@ void init()
 	printk("Initialize semaphores...\n");
 	init_Sem();
 	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
+	
+	init_fs();
 	
 	first_loader();
 

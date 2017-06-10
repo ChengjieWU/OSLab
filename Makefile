@@ -8,6 +8,8 @@ SEM	   := $(BIN_DIR)/sem.bin
 GAME   := $(BIN_DIR)/game.bin
 PROGRAM := $(BIN_DIR)/program.bin
 IMAGE  := disk.bin
+BITMAP := bitmap
+
 
 # Could be switched between GAME, TEST and SEM.
 TARGET := $(SEM)
@@ -83,9 +85,10 @@ TEST_O := $(TEST_C:%.c=$(OBJ_DIR)/%.o)
 
 $(IMAGE): $(BOOT) $(PROGRAM)
 	@mkdir -p $(BIN_DIR)
-	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件
+	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
-	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=1 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr
+	@$(DD) if=$(BITMAP) of=$(IMAGE) seek=1 conv=notrunc
+	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=2 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
 
 $(BOOT): $(BOOT_O)
 	@mkdir -p $(BIN_DIR)
@@ -95,7 +98,7 @@ $(BOOT): $(BOOT_O)
 	@$(OBJCOPY) --strip-all --only-section=.text --output-target=binary $@.out $@
 	@rm $@.out
 	perl ./boot/genboot.pl $@
-#		ruby mbr.rb $@
+
 
 $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.[cS]
 	@mkdir -p $(OBJ_BOOT_DIR)
