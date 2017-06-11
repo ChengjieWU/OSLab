@@ -7,8 +7,11 @@ TEST   := $(BIN_DIR)/test.bin
 SEM	   := $(BIN_DIR)/sem.bin
 GAME   := $(BIN_DIR)/game.bin
 PROGRAM := $(BIN_DIR)/program.bin
+FORMATTER := $(BIN_DIR)/formatter
+COPY2MYFS := $(BIN_DIR)/copy2myfs
+READ_MYFS := $(BIN_DIR)/read_myfs
 IMAGE  := disk.bin
-BITMAP := bitmap
+
 
 
 # Could be switched between GAME, TEST and SEM.
@@ -49,6 +52,7 @@ KERNEL_DIR     := kernel
 TEST_DIR       := test
 SEM_DIR		   := sem
 GAME_DIR	   := game
+TOOLS_DIR 	   := tools
 OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
 OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
@@ -83,11 +87,30 @@ SEM_O := $(SEM_C:%.c=$(OBJ_DIR)/%.o)
 TEST_C := $(shell find $(TEST_DIR) -name "*.c")
 TEST_O := $(TEST_C:%.c=$(OBJ_DIR)/%.o)
 
-$(IMAGE): $(BOOT) $(PROGRAM)
+FORMATTER_C := $(TOOLS_DIR)/formatter.c
+COPY2MYFS_C := $(TOOLS_DIR)/copy2myfs.c
+READ_MYFS_C := $(TOOLS_DIR)/read_myfs.c
+
+$(IMAGE): $(BOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
 	@mkdir -p $(BIN_DIR)
-	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
-	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
-	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=13 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
+#	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
+#	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
+#	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=128 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
+	@cd ./bin; ./formatter; ./copy2myfs
+	@cp ./bin/disk.bin $(IMAGE)
+
+
+$(FORMATTER): $(FORMATTER_C)
+	@mkdir -p $(BIN_DIR)
+	gcc $< -o $@
+
+$(COPY2MYFS): $(COPY2MYFS_C)
+	@mkdir -p $(BIN_DIR)
+	gcc $< -o $@
+	
+$(READ_MYFS): $(READ_MYFS_C)
+	@mkdir -p $(BIN_DIR)
+	gcc $< -o $@
 
 $(BOOT): $(BOOT_O)
 	@mkdir -p $(BIN_DIR)

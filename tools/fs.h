@@ -2,7 +2,7 @@
 #define __FS_H__
 
 
-#define DISKBLOCK 10000
+#define DISKBLOCK 20000
 #define blocksize 512
 #define FILEMAXLEN 24
 
@@ -11,9 +11,11 @@
 #define BMAPTERM (BMAPBLOCK * 512)
 
 #define INODEOFFSET (BMAPOFFSET + BMAPBLOCK)
-#define FILENUM 8
+#define FILENUM 120
 
 #define ROOTOFFSET (INODEOFFSET + FILENUM)
+
+#define DATAOFFSET (ROOTOFFSET + 1)
 
 #pragma pack(0)
 struct bitmap{

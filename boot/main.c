@@ -9,7 +9,9 @@
 #include "boot.h"
 
 #define KOFFSET 0xC0000000			/* This is not the only definition. in kernel/include/memory.h*/
-#define ELF_OFFSET_IN_DISK (512 * 12)/* This is not the only definition. */
+
+/***************             ********************/
+#define ELF_OFFSET_IN_DISK (512 * 127)/* This is not the only definition. */
 
 void readseg(unsigned char *, int, int);
 

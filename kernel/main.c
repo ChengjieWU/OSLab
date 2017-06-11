@@ -12,7 +12,7 @@
 #define USER_STACK KOFFSET
 
 /******************            ************************/
-#define ELF_OFFSET_IN_DISK (512 * 12)
+#define ELF_OFFSET_IN_DISK (512 * 127)
 #define GAME_OFFSET_IN_DISK KMEM + ELF_OFFSET_IN_DISK
 
 void readseg(unsigned char*,int,int);

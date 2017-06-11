@@ -13,14 +13,15 @@ int main()
 	fwrite(buffer, blocksize, 1, disk);
 	
 	memset(buffer, 0, sizeof buffer);
-	
 	/* Bitmap, which is occupied at first. */
-	buffer[0] = 0xff;
-	buffer[1] = 0xff;
+	if (DATAOFFSET / 8 + 1 > 512) printf("ERROR!\n");
+	int i;
+	for (i = 0; i < DATAOFFSET / 8 + 1; i++) {
+		buffer[i] = 0xff;
+	}
 	fwrite(buffer, blocksize, 1, disk);
 	
 	memset(buffer, 0, sizeof buffer);
-	int i;
 	for (i = 0; i < DISKBLOCK - 2; i++)
 		fwrite(buffer, blocksize, 1, disk);
 	fclose(disk);
