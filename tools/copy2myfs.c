@@ -30,10 +30,10 @@ int request_free_inode()
 }
 
 
-int main()
+void copy_file(const char *filename)
 {
 	FILE *disk = fopen("disk.bin", "rb+");
-	FILE *kernel = fopen("kernel.bin", "rb");
+	FILE *kernel = fopen(filename, "rb");
 	
 	fseek(kernel, 0, SEEK_END);
 	unsigned kernel_size = ftell(kernel);
@@ -51,7 +51,7 @@ int main()
 	int i = request_free_root_dirent();
 
 	root.entries[i].file_size = kernel_size;
-	strcpy(root.entries[i].filename, "kernel.bin\0");
+	strcpy(root.entries[i].filename, filename);
 	
 	int j = request_free_inode();
 
@@ -99,11 +99,14 @@ int main()
 	fseek(disk, BMAPOFFSET * blocksize, SEEK_SET);
 	fwrite((unsigned char *)&bmap, blocksize * BMAPBLOCK, 1, disk);
 	
-	
-	
 	fclose(kernel);
 	fclose(disk);
-	
+}
 
+
+int main()
+{
+	copy_file("kernel.bin\0");
+	copy_file("sem.bin\0");
 	return 0;
 }

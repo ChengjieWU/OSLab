@@ -11,11 +11,13 @@
 /* Kernel stack starts at 0xc1000000 (NOT end of phy-address), which is set in boot/start.S */
 #define USER_STACK KOFFSET
 
-/******************            ************************/
-#define ELF_OFFSET_IN_DISK (512 * 127)
-#define GAME_OFFSET_IN_DISK KMEM + ELF_OFFSET_IN_DISK
+/* Now we have file system, they are no longer needed. */
+//#define ELF_OFFSET_IN_DISK (512 * 127)
+//#define GAME_OFFSET_IN_DISK KMEM + ELF_OFFSET_IN_DISK
+//void readseg(unsigned char *, int, int);
 
-void readseg(unsigned char*,int,int);
+/* Only used in loading the first user programme. */
+void read_file(unsigned char *start, int count, int offset);
 
 #ifdef IA32_PAGE
 void init_page();
@@ -44,12 +46,7 @@ void init();
 void first_loader();
 void printk_test();
 
-
-
-void init_fs();
-
-
-
+void init_fs();	//initialize file system
 
 int main()
 {
@@ -126,14 +123,16 @@ void first_loader()
 	uint8_t buf[4096];
 	elf = (struct Elf*)buf;
 
-	readseg((unsigned char*)elf, 4096, GAME_OFFSET_IN_DISK);
+	//readseg((unsigned char*)elf, 4096, GAME_OFFSET_IN_DISK);
+	read_file((unsigned char*)elf, 4096, 0);
 
 
 	ph = (struct Proghdr*)((char *)elf + elf->e_phoff);
 	eph = ph + elf->e_phnum;
 	for(; ph < eph; ph ++) {
 		pa = (unsigned char*)ph->p_pa;
-		readseg(pa, ph->p_filesz, GAME_OFFSET_IN_DISK + ph->p_offset);
+		//readseg(pa, ph->p_filesz, GAME_OFFSET_IN_DISK + ph->p_offset);
+		read_file(pa, ph->p_filesz, ph->p_offset);
 		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
 	}
 	
