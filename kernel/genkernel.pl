@@ -11,7 +11,7 @@ if($n > 16 * 1024 * 1024){
 
 print STDERR "OK: kernel binary file is $n bytes (max 16 * 1024 * 1024)\n";
 
-$p = 16*1024*1024 - $n;
+$p = 16 * 1024 * 1024 - $n;
 $buf .= "\0" x $p;
 
 open(SIG, ">$ARGV[0]") || die "open >$ARGV[0]: $!";

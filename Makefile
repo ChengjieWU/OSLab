@@ -88,7 +88,7 @@ $(IMAGE): $(BOOT) $(PROGRAM)
 	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
 	@$(DD) if=$(BITMAP) of=$(IMAGE) seek=1 conv=notrunc
-	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=2 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
+	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=9 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
 
 $(BOOT): $(BOOT_O)
 	@mkdir -p $(BIN_DIR)

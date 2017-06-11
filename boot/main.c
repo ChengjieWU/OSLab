@@ -10,7 +10,7 @@
 
 #define SECTSIZE 512
 #define KOFFSET 0xC0000000			/* This is not the only definition. in kernel/include/memory.h*/
-#define ELF_OFFSET_IN_DISK 512		/* This is not the only definition. in kernel/include/memory.h*/
+#define ELF_OFFSET_IN_DISK (512 * 8)/* This is not the only definition. */
 
 void readseg(unsigned char *, int, int);
 

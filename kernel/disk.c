@@ -25,6 +25,14 @@ void readsect(void *dst, int offset) {
 	}
 }
 
+void readsect_n(void *dst, int offset, int num) {
+	unsigned char *pa = dst;
+	unsigned char *epa = dst + num * SECTSIZE;
+	for (; pa < epa; pa += SECTSIZE, offset++) {
+		readsect(pa, offset);
+	}
+}
+
 /* Boot block is already taken into account. */
 void readseg(unsigned char *pa, int count, int offset) {
 	unsigned char *epa;

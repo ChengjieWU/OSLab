@@ -12,7 +12,7 @@
 #define USER_STACK KOFFSET
 
 /******************            ************************/
-#define ELF_OFFSET_IN_DISK 512
+#define ELF_OFFSET_IN_DISK (512 * 8)
 #define GAME_OFFSET_IN_DISK KMEM + ELF_OFFSET_IN_DISK
 
 void readseg(unsigned char*,int,int);
@@ -116,6 +116,7 @@ void first_loader()
 	PCB *pro = new_process();
 	pro = pop_ready_list();
 	load_process_memory(pro);
+	printk("haha\n");
 	change_to_process(pro);
 
 	printk("Loading user programme...\n");
