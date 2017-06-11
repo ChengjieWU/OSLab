@@ -1,7 +1,6 @@
 #ifndef __FS_H__
 #define __FS_H__
 
-#include "common.h"
 
 #define DISKBLOCK 10000
 #define blocksize 512
@@ -18,15 +17,15 @@
 
 #pragma pack(0)
 struct bitmap{
-	uint8_t mask[BMAPTERM];
+	unsigned char mask[BMAPTERM];
 };
 #pragma pack()
 
 #pragma pack(0)
 struct dirent {
-  char     filename[FILEMAXLEN];
-  uint32_t file_size;
-  uint32_t inode_offset;
+  char filename[FILEMAXLEN];
+  unsigned file_size;
+  unsigned inode_offset;
 };
 #pragma pack()
 
@@ -38,7 +37,7 @@ struct dir {
 
 #pragma pack(0)
 struct inode {
-  uint32_t data_block_offsets[blocksize / sizeof(uint32_t)];
+  unsigned data_block_offsets[blocksize / sizeof(unsigned)];
 };
 #pragma pack()
 

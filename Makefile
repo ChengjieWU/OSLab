@@ -87,8 +87,7 @@ $(IMAGE): $(BOOT) $(PROGRAM)
 	@mkdir -p $(BIN_DIR)
 	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
-	@$(DD) if=$(BITMAP) of=$(IMAGE) seek=1 conv=notrunc
-	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=9 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
+	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=13 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
 
 $(BOOT): $(BOOT_O)
 	@mkdir -p $(BIN_DIR)
@@ -116,7 +115,7 @@ $(KERNEL): $(KERNEL_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
 	@echo ld -o $@
 	@$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-	perl ./kernel/genkernel.pl $@
+	
 
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
 	@mkdir -p $(OBJ_LIB_DIR)
