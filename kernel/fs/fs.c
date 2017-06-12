@@ -129,7 +129,7 @@ void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int
 	int start_bias = offset % blocksize;
 	int start_length = blocksize - start_bias;
 	int start_block = offset / blocksize;
-	int end_block = (offset + count) / blocksize;
+	int end_block = (offset + count) / blocksize;/***************/
 	
 	if (start_block == end_block)
 	{
@@ -157,10 +157,14 @@ void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int
 }
 void write_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count)
 {
-	int start_bias = offset % blocksize;//0
-	int start_length = blocksize - start_bias;//512
-	int start_block = offset / blocksize;//0
-	int end_block = (offset + count) / blocksize;//0
+	int start_bias = offset % blocksize;
+	int start_length = blocksize - start_bias;
+	int start_block = offset / blocksize;
+	/* Important note: when calculating end_block in write, we should minus 1. In read, we should not. */
+	/* The write function also. */
+	/* Why read not? Because even not minus one, the last sector read will read 0 bytes, which is ok. */
+	int end_block = (offset + count - 1) / blocksize;
+	
 	if (start_block == end_block)
 	{
 		read_a_sect_of_file(start_block, inode_offset);
@@ -216,7 +220,6 @@ void append_a_block(int fd)
 	block_num -= 1;
 	while (block_num >= (int)(blocksize / sizeof(uint32_t) - 1))
 	{
-		printk("error\n");
 		block_num -= (blocksize / sizeof(uint32_t) - 1);
 		inode_offset = Inode[inode_offset].data_block_offsets[blocksize / sizeof(uint32_t) - 1];
 	}
@@ -260,7 +263,7 @@ int write(int fd, void *buf, int len)
 	int block_num = (fcb[fd].file_size / blocksize) + !!(fcb[fd].file_size % blocksize);
 	block_num -= 1;
 	
-	int end_block = (offset + count) / blocksize;
+	int end_block = (offset + count - 1) / blocksize;
 	int i;
 	for (i = 0; i < end_block - block_num; i++) append_a_block(fd);
 	
@@ -315,7 +318,7 @@ int close(int fd)
 
 void read_file(unsigned char *start, int count, int offset)
 {
-	if (root.entries[3].file_size == 0) panic(0);
-	int inode_offset = root.entries[3].inode_offset;
+	if (root.entries[2].file_size == 0) panic(0);
+	int inode_offset = root.entries[2].inode_offset;
 	read_a_part_of_file(start, inode_offset, offset, count);
 }

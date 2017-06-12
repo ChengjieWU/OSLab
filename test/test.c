@@ -48,7 +48,7 @@ void test_main()
 {
 	printf("read and write test\n");
 	
-	int fd = fopen("test.bin", FS_READ);
+	int fd = fopen("kernel.bin", FS_READ);
 	int fd2 = fopen("newfile.bin", FS_WRITE);
 	
 	unsigned len = flseek(fd, 0, SEEK_END);
@@ -62,7 +62,7 @@ void test_main()
 	for (i = 0; i < blocknum; i++)
 	{
 		fread(fd, buffer, blocksize);
-		printf("%d\n", i);
+		//printf("%d\n", i);
 		fwrite(fd2, buffer, blocksize);
 	}
 	fread(fd, buffer, restbyte);
