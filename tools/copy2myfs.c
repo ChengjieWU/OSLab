@@ -110,6 +110,8 @@ int main()
 	copy_file("sem.bin\0");
 	copy_file("game.bin\0");
 	copy_file("test.bin\0");
-	copy_file("haha\0");
+	copy_file("universe.dat\0");
+	copy_file("success.dat\0");
+	copy_file("failure.dat\0");
 	return 0;
 }

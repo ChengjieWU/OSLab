@@ -9,9 +9,11 @@
 #include "video.h"
 
 #include "proc.h"
+#include "filesystem.h"
 
+/* Now, game data is regarded as files to read. No need to pre-included. */
 /* include data */
-#include "picture.h"
+//#include "picture.h"
 
 /*--------------------------------------------------------------------------*/
 
@@ -21,6 +23,7 @@
 #define groudWidth SCR_WIDTH
 #define groudHeight SCR_HEIGHT
 #define groudDepth SCR_DEPTH
+#define pixels (groudWidth * groudHeight * groudDepth)
 
 #define ballRadius 8
 #define ballTop 300
@@ -43,6 +46,12 @@
 #define speedSwitch 30
 #define flashSwitch frequency(24)
 #define step 30
+
+
+/* To store pictures. */
+unsigned char Image_Universe[pixels];
+unsigned char Image_Success[pixels];
+unsigned char Image_Failure[pixels];
 
 //#define __DEBUG__
 
@@ -68,6 +77,9 @@ enum {NOTDECIDED, WIN, LOSE};
 enum {NORMAL, QUIT, PAUSE};
 
 /*--------------------------------------------------------------------------*/
+
+/* read game data (images) */
+void read_data();
 
 /* video output functions */
 void draw_ball();
@@ -98,7 +110,12 @@ void game_main(void)
 {
 	//fork();
 	//printf("I'm process No.%d\n", getpid());
+	
 	printf("We are now in game!\n\n");
+	
+	printf("Loading...\n");
+	read_data();
+	
 	printf("***********************************\n");
 	printf("README:\nSpace --- pause or start\nQ --- quit\nLeft Arrow --- move left\nRight Arrow --- move right\n\n");
 	printf("***********************************\n");
@@ -127,12 +144,12 @@ void game_main(void)
 			else if (ret == PAUSE) continue;
 			if (state == WIN) 
 			{
-				fullVideo(gImage_SUCCESS);
+				fullVideo(Image_Success);
 				printf("Round %d: You WIN!\n", roundNum++);
 			}
 			else if (state == LOSE) 
 			{
-				fullVideo(gImage_FAILURE);
+				fullVideo(Image_Failure);
 				printf("Round %d: You LOSE!\n", roundNum++);
 			}
 		}
@@ -154,6 +171,22 @@ void init_Game()
 	v_y = ballspeedy;
 	//printf("%d", get_time);
 	init_display();
+}
+
+void read_data()
+{
+	int fd = fopen("universe.dat\0", FS_READ);
+	if (fd == -1) printf("Read file error!\n");
+	fread(fd, Image_Universe, pixels);
+	fclose(fd);
+	fd = fopen("success.dat\0", FS_READ);
+	if (fd == -1) printf("Read file error!\n");
+	fread(fd, Image_Success, pixels);
+	fclose(fd);
+	fd = fopen("failure.dat\0", FS_READ);
+	if (fd == -1) printf("Read file error!\n");
+	fread(fd, Image_Failure, pixels);
+	fclose(fd);
 }
 
 int round()
@@ -213,7 +246,7 @@ void draw_ball()
 
 void remove_ball() 
 {
-	remove_rectangular(ball_x - ballRadius, ball_y - ballRadius, ball_x + ballRadius, ball_y + ballRadius, gImage_Universe);
+	remove_rectangular(ball_x - ballRadius, ball_y - ballRadius, ball_x + ballRadius, ball_y + ballRadius, Image_Universe);
 }
 
 void draw_board()
@@ -225,7 +258,7 @@ void draw_board()
 
 void remove_board()
 {
-	remove_rectangular(board_x - boardHalfWidth, board_y - boardHalfHeight, board_x + boardHalfWidth, board_y + boardHalfHeight, gImage_Universe);
+	remove_rectangular(board_x - boardHalfWidth, board_y - boardHalfHeight, board_x + boardHalfWidth, board_y + boardHalfHeight, Image_Universe);
 }
 
 void remove_a_brick(int i, int j)
@@ -234,7 +267,7 @@ void remove_a_brick(int i, int j)
 	int sy = brickTop - brickRow * brickHalfHeight - (brickRow - 1) * brickHalfSpace;
 	int x = sx + j * 2 * (brickHalfWidth+brickHalfSpace);
 	int y = sy + i * 2 * (brickHalfHeight+brickHalfSpace);
-	remove_rectangular(x, y, x + 2 * brickHalfWidth, y + 2 * brickHalfHeight, gImage_Universe);
+	remove_rectangular(x, y, x + 2 * brickHalfWidth, y + 2 * brickHalfHeight, Image_Universe);
 }
 
 void draw_brick()
@@ -256,7 +289,7 @@ void draw_brick()
 
 void init_display()
 {
-	fullVideo(gImage_Universe);
+	fullVideo(Image_Universe);
 	draw_ball();
 	draw_board();
 	draw_brick();

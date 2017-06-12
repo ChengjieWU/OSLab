@@ -80,6 +80,7 @@ KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 
 GAME_C := $(shell find $(GAME_DIR) -name "*.c")
 GAME_O := $(GAME_C:%.c=$(OBJ_DIR)/%.o)
+GAME_DAT := $(shell find $(GAME_DIR) -name "*.dat")
 
 SEM_C := $(shell find $(SEM_DIR) -name "*.c")
 SEM_O := $(SEM_C:%.c=$(OBJ_DIR)/%.o)
@@ -97,7 +98,7 @@ $(IMAGE): $(BOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
 #	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
 #	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=128 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
 	@cd ./bin; ./formatter; ./copy2myfs
-	@cp ./bin/disk.bin $(IMAGE)
+	@mv ./bin/disk.bin $(IMAGE)
 
 
 $(FORMATTER): $(FORMATTER_C)
@@ -158,6 +159,7 @@ $(GAME): $(GAME_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
 	@echo ld -o $@
 	@$(LD) -m elf_i386 -T $(GAME_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+	@cp -r $(GAME_DAT) $< $(BIN_DIR)		#copy game data to bin directory
 
 $(OBJ_GAME_DIR)/%.o: $(GAME_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)/$(dir $<)

@@ -154,7 +154,7 @@ int close(int fd)
 
 void read_file(unsigned char *start, int count, int offset)
 {
-	if (root.entries[3].file_size == 0) panic(0);
-	int inode_offset = root.entries[3].inode_offset;
+	if (root.entries[2].file_size == 0) panic(0);
+	int inode_offset = root.entries[2].inode_offset;
 	read_a_part_of_file(start, inode_offset, offset, count);
 }
