@@ -84,6 +84,10 @@ int wthread_exit() {
 	return syscall(SYS_wthread_exit);
 }
 
+int fwrite(int fd, void *buf, int len) {
+	return syscall(SYS_write, fd, buf, len);
+}
+
 int fopen(const char *pathname, int state) {
 	return syscall(SYS_open, pathname, state);
 }

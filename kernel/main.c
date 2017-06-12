@@ -76,12 +76,15 @@ void init()
 	add_irq_handle(1, keyboard_event);
 	init_timer();
 	
-	printk("\nBase elements initialized.\n");
+	printk("\n-----------------------------------------------------------\n");
+	printk("\033[1m\033[45;33m Welcome! myOS \033[0m\n");
+	printk("\033[47;31m Booting Operating System...\033[0m\n");
+	printk("\tBase elements initialized.\n");
 	/* Printk test */
 	//printk_test();
 	
 	/* Create and test video memory write and read */
-	printk("Initialize video...\n");
+	printk("\tInitialize video...\n");
 	init_vmem_addr();
 #ifdef IA32_PAGE
 	init_vmem_space();
@@ -91,32 +94,32 @@ void init()
 #endif
 	init_vmem();
 	
-	printk("Initialize memory management...\n");
+	printk("\tInitialize memory management...\n");
 	init_mm();
 	
-	printk("Initialize process control block...\n");
+	printk("\tInitialize process control block...\n");
 	init_PCB();
-	printk("Initialize semaphores...\n");
+	printk("\tInitialize semaphores...\n");
 	init_Sem();
 	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
 	
-	printk("Initialize file system...\n");
+	printk("\tInitialize file system...\n");
 	init_fs();
 	
 	first_loader();
 
-	panic("should not get here!");
+	panic("\tshould not get here!");
 }
 
 void first_loader()
 {
-	printk("Creating the frist process...\n");
+	printk("\tCreating the frist process...\n");
 	PCB *pro = new_process();
 	pro = pop_ready_list();
 	load_process_memory(pro);
 	change_to_process(pro);
 
-	printk("Loading user programme...\n");
+	printk("\tLoading user programme...\n");
 	struct Elf *elf;
 	struct Proghdr *ph, *eph;
 	unsigned char *pa, *i;
@@ -137,7 +140,8 @@ void first_loader()
 		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
 	}
 	
-	printk("Here we go!\n\n");
+	printk("\033[47;31m Here we go!\033[0m\n");
+	printk("-----------------------------------------------------------\n");
 	/* Now we have PCB! Kernel stack is stored in PCB, and allocated by mm, This will never use! */
 	/* set tss.esp0 to current kernel stack	position, where trap frame will be built*/
 	//asm volatile("movl %%esp, %0" : "=r"(tss.esp0));

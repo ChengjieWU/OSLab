@@ -1,8 +1,10 @@
 #include "types.h"
 #include "printf.h"
 #include "proc.h"
+
 #include "filesystem.h"
-#include "video.h"
+#include "string.h"
+
 /*
 void test_main()
 {
@@ -38,28 +40,36 @@ void test_main()
 	exit();
 }*/
 
-unsigned char buffer[50];
-unsigned char gImage_FAILURE[1440000];
+#define blocksize 512
+
+unsigned char buffer[blocksize];
 
 void test_main()
 {
-	/*int fd = fopen("haha\0", FS_READ);
-	int len = fread(fd, buffer, 50);
-	printf("Total length read is %d: ", len);
-	fclose(fd);
-	int i;
-	for (i = 0; i < 50; i++)
-		printf("%c", buffer[i]);*/
+	printf("read and write test\n");
 	
-	int fd = fopen("hehe\0", FS_READ);
-	int len = fread(fd, gImage_FAILURE, 1440000);
-	printf("Total byte read is: %d\n", len);
+	int fd = fopen("test.bin", FS_READ);
+	int fd2 = fopen("newfile.bin", FS_WRITE);
+	
+	unsigned len = flseek(fd, 0, SEEK_END);
+	int blocknum = len / blocksize;
+	int restbyte = len % blocksize;
+	
+	printf("%u\n", len);
+	flseek(fd, 0, SEEK_SET);
+	
 	int i;
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < blocknum; i++)
 	{
-		printf("0x%x, ", gImage_FAILURE[i]);
+		fread(fd, buffer, blocksize);
+		printf("%d\n", i);
+		fwrite(fd2, buffer, blocksize);
 	}
-	fclose(fd);	
-	fullVideo(gImage_FAILURE);
+	fread(fd, buffer, restbyte);
+	fwrite(fd2, buffer, restbyte);
+	
+	fclose(fd);
+	fclose(fd2);
+	
 	exit();
 }

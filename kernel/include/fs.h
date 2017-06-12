@@ -68,6 +68,7 @@ struct FCB {
 	uint32_t offset;
 	enum FS_STATE state;
 	struct FCB *next;
+	struct dirent *direntry;
 };
 
 

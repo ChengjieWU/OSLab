@@ -97,9 +97,13 @@ $(IMAGE): $(BOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
 #	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
 #	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
 #	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=128 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
+	@echo Use 'formatter' to format disk.
+	@echo Use 'copy2myfs' to copy all the programmes and data files to disk.
 	@cd ./bin; ./formatter; ./copy2myfs
-	@mv ./bin/disk.bin $(IMAGE)
-
+	@echo
+	@echo Disk building succeed!
+	@echo -----------------------------------------------------------
+	mv $(BIN_DIR)/$(IMAGE) $(IMAGE)
 
 $(FORMATTER): $(FORMATTER_C)
 	@mkdir -p $(BIN_DIR)
@@ -159,7 +163,7 @@ $(GAME): $(GAME_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
 	@echo ld -o $@
 	@$(LD) -m elf_i386 -T $(GAME_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-	@cp -r $(GAME_DAT) $< $(BIN_DIR)		#copy game data to bin directory
+	cp -r $(GAME_DAT) $(BIN_DIR)		#copy game data to bin directory
 
 $(OBJ_GAME_DIR)/%.o: $(GAME_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)/$(dir $<)
@@ -195,7 +199,10 @@ $(OBJ_SEM_DIR)/%.o: $(SEM_DIR)/%.c
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)
 
-.PHONY: qemu debug gdb clean submit
+.PHONY: qemu debug gdb clean submit run
+
+run:
+	$(QEMU) $(QEMU_OPTIONS) $(IMAGE)
 
 qemu: $(IMAGE)
 	$(QEMU) $(QEMU_OPTIONS) $(IMAGE)

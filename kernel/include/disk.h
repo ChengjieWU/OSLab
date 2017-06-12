@@ -4,5 +4,7 @@
 void readsect(void *dst, int offset);
 void readsect_n(void *dst, int offset, int num);
 void readseg(unsigned char *pa, int count, int offset);
+void writesect(void *dst, int offset);
+void writesect_n(void *dst, int offset, int num);
 
 #endif
