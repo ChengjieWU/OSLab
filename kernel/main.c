@@ -100,6 +100,7 @@ void init()
 	init_Sem();
 	//((void(*)(void))elf->e_entry)(); /* Here we go! *//* Old jumper, will never use. */
 	
+	printk("Initialize file system...\n");
 	init_fs();
 	
 	first_loader();

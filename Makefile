@@ -15,7 +15,7 @@ IMAGE  := disk.bin
 
 
 # Could be switched between GAME, TEST and SEM.
-TARGET := $(SEM)
+# TARGET := $(SEM) Now we have file system, so it is no longer needed.
 
 CC      := gcc
 LD      := ld
@@ -102,15 +102,18 @@ $(IMAGE): $(BOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
 
 $(FORMATTER): $(FORMATTER_C)
 	@mkdir -p $(BIN_DIR)
-	gcc $< -o $@
+	@gcc $< -o $@
+	@echo cc $< -o $@
 
 $(COPY2MYFS): $(COPY2MYFS_C)
 	@mkdir -p $(BIN_DIR)
-	gcc $< -o $@
+	@gcc $< -o $@
+	@echo cc $< -o $@
 	
 $(READ_MYFS): $(READ_MYFS_C)
 	@mkdir -p $(BIN_DIR)
-	gcc $< -o $@
+	@gcc $< -o $@
+	@echo cc $< -o $@
 
 $(BOOT): $(BOOT_O)
 	@mkdir -p $(BIN_DIR)
@@ -128,9 +131,8 @@ $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.[cS]
 	@$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
 	
 
-$(PROGRAM): $(KERNEL) $(TARGET)
+$(PROGRAM): $(KERNEL) $(GAME) $(TEST) $(SEM)
 	@mkdir -p $(BIN_DIR)
-	cat $(KERNEL) $(TARGET) > $(PROGRAM)
 
 
 $(KERNEL): $(LD_SCRIPT)
@@ -138,7 +140,7 @@ $(KERNEL): $(KERNEL_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
 	@echo ld -o $@
 	@$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-	
+#	perl ./kernel/genkernel.pl
 
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
 	@mkdir -p $(OBJ_LIB_DIR)

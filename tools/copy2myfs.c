@@ -108,5 +108,8 @@ int main()
 {
 	copy_file("kernel.bin\0");
 	copy_file("sem.bin\0");
+	copy_file("game.bin\0");
+	copy_file("test.bin\0");
+	copy_file("haha\0");
 	return 0;
 }

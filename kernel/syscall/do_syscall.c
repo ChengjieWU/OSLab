@@ -22,6 +22,10 @@ int sem_init_kernel(semaphore *, int);
 int sem_destroy_kernel(semaphore *);
 void wthread_create_kernel(void *, void *, wthread *);
 void wthread_exit_kernel();
+int open(const char *pathname, int state);
+int close(int fd);
+int lseek(int fd, int offset, int whence);
+int read(int fd, void *buf, int len);
 
 /*
 uint32_t mm_brk(uint32_t);
@@ -61,27 +65,6 @@ static void sys_write(TrapFrame *tf) {
 	}*/
 }
 
-/*
-static void sys_open(TrapFrame *tf) 
-{
-	tf->eax = fs_open((const char*)tf->ebx, tf->ecx);
-}
-
-static void sys_close(TrapFrame *tf) 
-{
-	tf->eax = fs_close(tf->ebx);
-}
-
-static void sys_read(TrapFrame *tf) 
-{
-	tf->eax = fs_read(tf->ebx, (char*)tf->ecx, tf->edx);
-}
-
-static void sys_lseek(TrapFrame *tf) {
-	tf->eax = fs_lseek(tf->ebx, tf->ecx, tf->edx);
-}
-*/
-
 void do_syscall(TrapFrame *tf) {
 	switch(tf->eax) {
 		/* The `add_irq_handle' system call is artificial. We use it to
@@ -113,10 +96,10 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_sem_destroy: tf->eax = sem_destroy_kernel((semaphore *)tf->ebx); break;
 		case SYS_wthread_create: wthread_create_kernel((void *)tf->ebx, (void *)tf->ecx, (wthread *)tf->edx); break;
 		case SYS_wthread_exit: wthread_exit_kernel(); break;
-		//case SYS_read: sys_read(tf); break;
-		//case SYS_open: sys_open(tf); break;
-		//case SYS_lseek: sys_lseek(tf); break;
-		//case SYS_close: sys_close(tf); break;
+		case SYS_read: tf->eax = read(tf->ebx, (char *)tf->ecx, tf->edx); break;
+		case SYS_open: tf->eax = open((const char*)tf->ebx, tf->ecx); break;
+		case SYS_lseek: tf->eax = lseek(tf->ebx, tf->ecx, tf->edx); break;
+		case SYS_close: tf->eax = close(tf->ebx); break;
 
 		default: panic("Unhandled system call: id = %d, eip = 0x%08x", tf->eax, tf->eip);
 	}

@@ -44,5 +44,31 @@ struct inode {
 };
 #pragma pack()
 
+/* The followings are not in formatter tools. */
+
+#define FCBNUM 20
+
+enum FS_STATE {
+    FS_WRITE,
+    FS_READ,
+    FS_WR,
+    FS_CLOSE
+};
+
+enum FS_WHENCE {
+	SEEK_SET,
+	SEEK_CUR,
+	SEEK_END
+};
+
+struct FCB {
+	int index;
+	uint32_t inode_offset;
+	uint32_t file_size;
+	uint32_t offset;
+	enum FS_STATE state;
+	struct FCB *next;
+};
+
 
 #endif

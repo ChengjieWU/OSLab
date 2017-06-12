@@ -23,14 +23,27 @@ int main()
 		{
 			FILE *file = fopen((const char *)root.entries[i].filename, "wb");
 			int j = root.entries[i].inode_offset;
+			int complete_block = root.entries[i].file_size / blocksize;
+			int rest_bytes = root.entries[i].file_size % blocksize;
+			
+			int count = 0;
 			
 			int k = 0;
 			while (Inode[j].data_block_offsets[k] != 0)
 			{
 				//printf("%d\n", Inode[j].data_block_offsets[k]);
 				fseek(disk, Inode[j].data_block_offsets[k] * blocksize, SEEK_SET);
-				fread(buffer, blocksize, 1, disk);
-				fwrite(buffer, blocksize, 1, file);
+				if (count == complete_block)
+				{
+					fread(buffer, rest_bytes, 1, disk);
+					fwrite(buffer, rest_bytes, 1, file);
+				}
+				else
+				{
+					fread(buffer, blocksize, 1, disk);
+					fwrite(buffer, blocksize, 1, file);
+				}
+				count += 1;
 				k++;
 				if (k == blocksize / sizeof(unsigned) - 1)
 				{

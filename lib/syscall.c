@@ -83,3 +83,19 @@ int wthread_create(wthread *thread, void *func, void *arg) {
 int wthread_exit() {
 	return syscall(SYS_wthread_exit);
 }
+
+int fopen(const char *pathname, int state) {
+	return syscall(SYS_open, pathname, state);
+}
+
+int fclose(int fd) {
+	return syscall(SYS_close, fd);
+}
+
+int flseek(int fd, int offset, int whence) {
+	return syscall(SYS_lseek, fd, offset, whence);
+}
+
+int fread(int fd, void *buf, int len) {
+	return syscall(SYS_read, fd, buf, len);
+}
