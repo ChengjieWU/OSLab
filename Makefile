@@ -91,6 +91,7 @@ TEST_O := $(TEST_C:%.c=$(OBJ_DIR)/%.o)
 FORMATTER_C := $(TOOLS_DIR)/formatter.c
 COPY2MYFS_C := $(TOOLS_DIR)/copy2myfs.c
 READ_MYFS_C := $(TOOLS_DIR)/read_myfs.c
+FS_H := $(TOOLS_DIR)/fs.h
 
 $(IMAGE): $(BOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
 	@mkdir -p $(BIN_DIR)
@@ -105,17 +106,17 @@ $(IMAGE): $(BOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
 	@echo -----------------------------------------------------------
 	mv $(BIN_DIR)/$(IMAGE) $(IMAGE)
 
-$(FORMATTER): $(FORMATTER_C)
+$(FORMATTER): $(FORMATTER_C) $(FS_H)
 	@mkdir -p $(BIN_DIR)
 	@gcc $< -o $@
 	@echo cc $< -o $@
 
-$(COPY2MYFS): $(COPY2MYFS_C)
+$(COPY2MYFS): $(COPY2MYFS_C) $(FS_H)
 	@mkdir -p $(BIN_DIR)
 	@gcc $< -o $@
 	@echo cc $< -o $@
 	
-$(READ_MYFS): $(READ_MYFS_C)
+$(READ_MYFS): $(READ_MYFS_C) $(FS_H)
 	@mkdir -p $(BIN_DIR)
 	@gcc $< -o $@
 	@echo cc $< -o $@

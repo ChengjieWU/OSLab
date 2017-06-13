@@ -17,7 +17,6 @@ int request_free_root_dirent()
 	if (i == blocksize / sizeof(struct dirent)) printf("ERROR!\n");
 	return i;
 }
-
 int request_free_inode()
 {
 	int j;
@@ -38,7 +37,8 @@ void copy_file(const char *filename)
 	fseek(kernel, 0, SEEK_END);
 	unsigned kernel_size = ftell(kernel);
 	fseek(kernel, 0, SEEK_SET);
-	int kernel_block = (kernel_size / blocksize) + 1;
+	//int kernel_block = (kernel_size / blocksize) + 1;
+	int kernel_block = kernel_size / blocksize + !!(kernel_size % blocksize);
 	
 	fseek(disk, ROOTOFFSET * blocksize, SEEK_SET);
 	fread((unsigned char *)&root, blocksize, 1, disk);
@@ -113,5 +113,8 @@ int main()
 	copy_file("universe.dat\0");
 	copy_file("success.dat\0");
 	copy_file("failure.dat\0");
+	
+	
+	
 	return 0;
 }

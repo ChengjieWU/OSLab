@@ -18,6 +18,8 @@
 
 #define DATAOFFSET (ROOTOFFSET + 1)
 
+/* Assume that the following sturctures occupy 1 blocksize in total. */
+
 #pragma pack(0)
 struct bitmap{
 	uint8_t mask[BMAPTERM];

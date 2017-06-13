@@ -16,7 +16,8 @@ void init_fs()
 	readsect_n((uint8_t *)&root, ROOTOFFSET, 1);
 	fcb_free_list = NULL;
 	int i;
-	for (i = 0; i < FCBNUM; i++)
+	/* FCB 0, 1, 2 are reserved. */
+	for (i = 3; i < FCBNUM; i++)
 	{
 		fcb[i].index = i;
 		fcb[i].inode_offset = 0;
@@ -124,12 +125,13 @@ void write_a_sect_of_file(int block_num, int inode_offset)
 }
 void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count)
 {
+	if (count <= 0) return;	//for safe and sound
 	/* Note that currently, inode_offset is the inode index of the first inode of the file. */
 	/* offset is the offset within the whole file, and count is the number of bytes read. */
 	int start_bias = offset % blocksize;
 	int start_length = blocksize - start_bias;
 	int start_block = offset / blocksize;
-	int end_block = (offset + count) / blocksize;/***************/
+	int end_block = (offset + count - 1) / blocksize;/***************/
 	
 	if (start_block == end_block)
 	{
@@ -157,6 +159,7 @@ void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int
 }
 void write_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count)
 {
+	if (count <= 0) return;	//for safe and sound
 	int start_bias = offset % blocksize;
 	int start_length = blocksize - start_bias;
 	int start_block = offset / blocksize;
@@ -242,6 +245,7 @@ int read(int fd, void *buf, int len)
 {
 	if (fd < 0 || fd >= FCBNUM) return -1;
 	if (fcb[fd].state != FS_READ && fcb[fd].state != FS_WR) return -1;
+	if (len <= 0) return 0;	//for safe and sound
 	unsigned char *start = (unsigned char *)buf;
 	int inode_offset = fcb[fd].inode_offset;
 	int offset = fcb[fd].offset;
@@ -255,6 +259,7 @@ int write(int fd, void *buf, int len)
 {
 	if (fd < 0 || fd >= FCBNUM) return -1;
 	if (fcb[fd].state != FS_WRITE && fcb[fd].state != FS_WR) return -1;
+	if (len <= 0) return 0;	//for safe and sound
 	unsigned char *start = (unsigned char *)buf;
 	int inode_offset = fcb[fd].inode_offset;
 	int offset = fcb[fd].offset;
@@ -318,7 +323,8 @@ int close(int fd)
 
 void read_file(unsigned char *start, int count, int offset)
 {
-	if (root.entries[2].file_size == 0) panic(0);
+	if (root.entries[2].file_size == 0) panic("The loaded file is empty!\n");
 	int inode_offset = root.entries[2].inode_offset;
+	if (count <= 0) return;	//for safe and sound
 	read_a_part_of_file(start, inode_offset, offset, count);
 }

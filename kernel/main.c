@@ -130,7 +130,6 @@ void first_loader()
 	//readseg((unsigned char*)elf, 4096, GAME_OFFSET_IN_DISK);
 	read_file((unsigned char*)elf, 4096, 0);
 
-
 	ph = (struct Proghdr*)((char *)elf + elf->e_phoff);
 	eph = ph + elf->e_phnum;
 	for(; ph < eph; ph ++) {

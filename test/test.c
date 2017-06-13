@@ -5,7 +5,6 @@
 #include "filesystem.h"
 #include "string.h"
 
-/*
 void test_main()
 {
 	fork();
@@ -37,39 +36,5 @@ void test_main()
 			printf("************\n");
 		}
 	}
-	exit();
-}*/
-
-#define blocksize 512
-
-unsigned char buffer[blocksize];
-
-void test_main()
-{
-	printf("read and write test\n");
-	
-	int fd = fopen("kernel.bin", FS_READ);
-	int fd2 = fopen("newfile.bin", FS_WRITE);
-	
-	unsigned len = flseek(fd, 0, SEEK_END);
-	int blocknum = len / blocksize;
-	int restbyte = len % blocksize;
-	
-	printf("%u\n", len);
-	flseek(fd, 0, SEEK_SET);
-	
-	int i;
-	for (i = 0; i < blocknum; i++)
-	{
-		fread(fd, buffer, blocksize);
-		//printf("%d\n", i);
-		fwrite(fd2, buffer, blocksize);
-	}
-	fread(fd, buffer, restbyte);
-	fwrite(fd2, buffer, restbyte);
-	
-	fclose(fd);
-	fclose(fd2);
-	
 	exit();
 }
