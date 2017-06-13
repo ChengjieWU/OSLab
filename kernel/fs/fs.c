@@ -9,6 +9,20 @@ struct inode Inode[FILENUM];
 struct FCB fcb[FCBNUM];
 struct FCB *fcb_free_list;
 
+/* Implemented in util.c */
+int fcb_allocate();
+bool fcb_free(int fd);
+int request_free_root_dirent();
+uint32_t request_free_inode();
+void append_a_block(int fd);
+
+/* Implemented in rw.c */
+void read_a_sect_of_file(int block_num, int inode_offset);
+void write_a_sect_of_file(int block_num, int inode_offset);
+void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count);
+void write_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count);
+
+
 void init_fs()
 {
 	readsect_n(bmap.mask, BMAPOFFSET, BMAPBLOCK);
@@ -29,6 +43,7 @@ void init_fs()
 		fcb[i].direntry = NULL;
 	}
 }
+
 void fs_writeback()
 {
 	writesect_n(bmap.mask, BMAPOFFSET, BMAPBLOCK);
@@ -36,46 +51,6 @@ void fs_writeback()
 	writesect_n((uint8_t *)&root, ROOTOFFSET, 1);
 }
 
-
-int fcb_allocate()
-{
-	if (fcb_free_list == NULL) return -1;
-	struct FCB *p = fcb_free_list;
-	fcb_free_list = fcb_free_list->next;
-	return p->index;
-}
-
-bool fcb_free(int fd)
-{
-	if (fd < 0 || fd >= FCBNUM) return false;
-	fcb[fd].next = fcb_free_list;
-	fcb_free_list = &fcb[fd];
-	return true;
-}
-
-int request_free_root_dirent()
-{
-	int i;
-	for (i = 0; i < blocksize / sizeof(struct dirent); i++)
-	{
-		if (root.entries[i].file_size == 0) break;
-	}
-	if (i == blocksize / sizeof(struct dirent)) panic("No free root directory entries!\n");
-	return i;
-}
-/* Return Inode offset. */
-uint32_t request_free_inode()
-{
-	int j;
-	for (j = 0; j < FILENUM; j++)
-	{
-		if (Inode[j].data_block_offsets[0] == 0) break;
-	}
-	if (j == FILENUM) panic("No free inodes!\n");
-	memset(buffer, 0, blocksize);
-	writesect(buffer, j + INODEOFFSET);
-	return j;
-}
 /* Return fd. If don't open it, return -1. */
 int open(const char *pathname, enum FS_STATE state)
 {
@@ -99,145 +74,6 @@ int open(const char *pathname, enum FS_STATE state)
 	fcb[fd].direntry = &root.entries[i];
 	fs_writeback();
 	return fd;
-}
-
-/* Blocksize is equal to sectorsize here! */
-/* Note that in the following two functions, legality is not checked! */
-void read_a_sect_of_file(int block_num, int inode_offset)
-{
-	int inode_tmp = inode_offset;
-	while (block_num >= blocksize / sizeof(uint32_t) - 1)
-	{
-		block_num -= (blocksize / sizeof(uint32_t) - 1);
-		inode_tmp = Inode[inode_tmp].data_block_offsets[blocksize / sizeof(uint32_t) - 1];
-	}
-	readsect(buffer, Inode[inode_tmp].data_block_offsets[block_num]);
-}
-void write_a_sect_of_file(int block_num, int inode_offset)
-{
-	int inode_tmp = inode_offset;
-	while (block_num >= blocksize / sizeof(uint32_t) - 1)
-	{
-		block_num -= (blocksize / sizeof(uint32_t) - 1);
-		inode_tmp = Inode[inode_tmp].data_block_offsets[blocksize / sizeof(uint32_t) - 1];
-	}
-	writesect(buffer, Inode[inode_tmp].data_block_offsets[block_num]);
-}
-void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count)
-{
-	if (count <= 0) return;	//for safe and sound
-	/* Note that currently, inode_offset is the inode index of the first inode of the file. */
-	/* offset is the offset within the whole file, and count is the number of bytes read. */
-	int start_bias = offset % blocksize;
-	int start_length = blocksize - start_bias;
-	int start_block = offset / blocksize;
-	int end_block = (offset + count - 1) / blocksize;/***************/
-	
-	if (start_block == end_block)
-	{
-		read_a_sect_of_file(start_block, inode_offset);
-		memcpy(start, buffer + start_bias, count);
-	}
-	else
-	{
-		read_a_sect_of_file(start_block, inode_offset);
-		memcpy(start, buffer + start_bias, start_length);
-		start += start_length;
-		start_block += 1;
-		count -= start_length;
-		while (start_block < end_block)
-		{
-			read_a_sect_of_file(start_block, inode_offset);
-			memcpy(start, buffer, blocksize);
-			start += blocksize;
-			start_block += 1;
-			count -= blocksize;
-		}
-		read_a_sect_of_file(start_block, inode_offset);
-		memcpy(start, buffer, count);
-	}
-}
-void write_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count)
-{
-	if (count <= 0) return;	//for safe and sound
-	int start_bias = offset % blocksize;
-	int start_length = blocksize - start_bias;
-	int start_block = offset / blocksize;
-	/* Important note: when calculating end_block in write, we should minus 1. In read, we should not. */
-	/* The write function also. */
-	/* Why read not? Because even not minus one, the last sector read will read 0 bytes, which is ok. */
-	int end_block = (offset + count - 1) / blocksize;
-	
-	if (start_block == end_block)
-	{
-		read_a_sect_of_file(start_block, inode_offset);
-		memcpy(buffer + start_bias, start, count);
-		write_a_sect_of_file(start_block, inode_offset);
-	}
-	else
-	{
-		read_a_sect_of_file(start_block, inode_offset);
-		memcpy(buffer + start_bias, start, start_length);
-		write_a_sect_of_file(start_block, inode_offset);
-		start += start_length;
-		start_block += 1;
-		count -= start_length;
-		while (start_block < end_block)
-		{
-			memcpy(buffer, start, blocksize);
-			write_a_sect_of_file(start_block, inode_offset);
-			start += blocksize;
-			start_block += 1;
-			count -= blocksize;
-		}
-		read_a_sect_of_file(start_block, inode_offset);
-		memcpy(buffer, start, count);
-		write_a_sect_of_file(start_block, inode_offset);
-	}
-}
-uint32_t request_free_data_block()
-{
-	int byte;
-	for (byte = 0; byte < BMAPTERM; byte++)
-	{
-		if (~bmap.mask[byte] == 0) continue;
-		int bit;
-		for (bit = 0; bit < 8; bit++)
-		{
-			if (!(bmap.mask[byte] & (0x1 << bit)))
-			{
-				bmap.mask[byte] = bmap.mask[byte] | (0x1 << bit);
-				memset(buffer, 0, blocksize);
-				writesect(buffer, 8 * byte + bit);
-				return 8 * byte + bit;
-			}
-		}
-	}
-	panic("Disk is full!\n");
-	return 0;
-}
-void append_a_block(int fd)
-{
-	int inode_offset = fcb[fd].inode_offset;
-	int block_num = (fcb[fd].file_size / blocksize) + !!(fcb[fd].file_size % blocksize);
-	block_num -= 1;
-	while (block_num >= (int)(blocksize / sizeof(uint32_t) - 1))
-	{
-		block_num -= (blocksize / sizeof(uint32_t) - 1);
-		inode_offset = Inode[inode_offset].data_block_offsets[blocksize / sizeof(uint32_t) - 1];
-	}
-	block_num += 1;
-	if (block_num == blocksize / sizeof(uint32_t) - 1)
-	{
-		int j = request_free_inode();
-		Inode[inode_offset].data_block_offsets[blocksize / sizeof(uint32_t) - 1] = j;
-		inode_offset = j;
-		Inode[inode_offset].data_block_offsets[0] = request_free_data_block();
-	}
-	else
-	{
-		Inode[inode_offset].data_block_offsets[block_num] = request_free_data_block();
-	}
 }
 
 /* Return the number of bytes read. If it is not for read, return -1. */

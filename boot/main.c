@@ -1,41 +1,30 @@
-/* boot.S的主要功能是切换在实模式工作的处理器到32位保护模式。为此需要设置正确的
- * GDT、段寄存器和CR0寄存器。C语言代码的主要工作是将磁盘上的内容装载到内存中去。
- * 磁盘镜像的结构如下：
-	 +-----------+------------------.        .-----------------+
-	 |   引导块   |  游戏二进制代码       ...        (ELF格式)     |
-	 +-----------+------------------`        '-----------------+
- * C代码将游戏文件整个加载到物理内存0x100000的位置，然后跳转到游戏的入口执行。 */
-
 #include "boot.h"
 
-#define KOFFSET 0xC0000000			/* This is not the only definition. in kernel/include/memory.h*/
-
-/***************             ********************/
-#define ELF_OFFSET_IN_DISK (512 * 127)/* This is not the only definition. */
+/* Now we have extended boot. Boot will load extended boot first. These will never be used.*/
+//#define KOFFSET 0xC0000000			/* This is not the only definition. in kernel/include/memory.h*/
+//#define ELF_OFFSET_IN_DISK (512 * 127)/* This is not the only definition. */
 
 void readseg(unsigned char *, int, int);
 
-void
-bootmain(void) {
+void bootmain(void) {
+	
 	struct ELFHeader *elf;
 	struct ProgramHeader *ph, *eph;
 	unsigned char* pa, *i;
 
-	/* 因为引导扇区只有512字节，我们设置了堆栈从0x8000向下生长。
-	 * 我们需要一块连续的空间来容纳ELF文件头，因此选定了0x8000。 */
+	/* 因为引导扇区只有512字节，我们设置了堆栈从0x8000向下生长。*/
+	/* Here it doesn't mean stack. It means where to store this local variable elf. */
 	elf = (struct ELFHeader*)0x8000;
 
-	/* 读入ELF文件头 */
-	readseg((unsigned char*)elf, 4096, ELF_OFFSET_IN_DISK);
+	readseg((unsigned char*)elf, 4096, 0);
 
-	/* 把每个program segement依次读入内存 */
 	ph = (struct ProgramHeader*)((char *)elf + elf->phoff);
 	eph = ph + elf->phnum;
-	for(; ph < eph; ph ++) {
-		pa = (unsigned char*)(ph->paddr - KOFFSET); /* 获取物理地址 */
-		readseg(pa, ph->filesz, ph->off + ELF_OFFSET_IN_DISK); /* 读入数据 */
-		for (i = pa + ph->filesz; i < pa + ph->memsz; *i ++ = 0);
+	for(; ph < eph; ph++)
+	{
+		pa = (unsigned char*)ph->paddr;
+		readseg(pa, ph->filesz, ph->off);
+		for (i = pa + ph->filesz; i < pa + ph->memsz; *i++ = 0);
 	}
-
-	((void(*)(void))(elf->entry - KOFFSET))();
+	((void(*)(void))elf->entry)();
 }

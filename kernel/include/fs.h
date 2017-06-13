@@ -7,7 +7,9 @@
 #define blocksize 512
 #define FILEMAXLEN 24
 
-#define BMAPOFFSET 1
+#define EXBOOT 34
+
+#define BMAPOFFSET (1 + EXBOOT)
 #define BMAPBLOCK (DISKBLOCK / (blocksize * 8) + 1)
 #define BMAPTERM (BMAPBLOCK * 512)
 

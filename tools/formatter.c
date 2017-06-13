@@ -12,6 +12,21 @@ int main()
 	FILE *disk = fopen("disk.bin", "wb");
 	fwrite(buffer, blocksize, 1, disk);
 	
+	/* In fact, for size reason, I modified boot, making it only works for having exboot. */
+	/* So exboot > 0 is a must. */
+	if (EXBOOT <= 0) printf("ERROR!\n");
+	if (EXBOOT > 0) 
+	{
+		FILE *exboot = fopen("exboot.bin", "rb");
+		int extended_boot;
+		for (extended_boot = 0; extended_boot < EXBOOT; extended_boot++)
+		{
+			fread(buffer, blocksize, 1, exboot);
+			fwrite(buffer, blocksize, 1, disk);
+		}
+		fclose(exboot);
+	}
+	
 	memset(buffer, 0, sizeof buffer);
 	/* Bitmap, which is occupied at first. */
 	if (DATAOFFSET / 8 + !!(DATAOFFSET % 8) > blocksize) printf("ERROR!\n");

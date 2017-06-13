@@ -26,13 +26,10 @@ readsect(void *dst, int offset) {
 	}
 }
 
-/* 将位于磁盘offset位置的count字节数据读入物理地址pa */
-void
-readseg(unsigned char *pa, int count, int offset) {
-	unsigned char *epa;
-	epa = pa + count;
-	pa -= offset % SECTSIZE;
-	offset = (offset / SECTSIZE) + 1;
-	for(; pa < epa; pa += SECTSIZE, offset ++)
+void readsect_n(void *dst, int offset, int num) {
+	unsigned char *pa = dst;
+	unsigned char *epa = dst + num * SECTSIZE;
+	for (; pa < epa; pa += SECTSIZE, offset++) {
 		readsect(pa, offset);
+	}
 }

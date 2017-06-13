@@ -2,6 +2,7 @@ STU_ID = 151220122
 
 BIN_DIR := bin
 BOOT   := $(BIN_DIR)/boot.bin
+EXBOOT := $(BIN_DIR)/exboot.bin
 KERNEL := $(BIN_DIR)/kernel.bin
 TEST   := $(BIN_DIR)/test.bin
 SEM	   := $(BIN_DIR)/sem.bin
@@ -48,6 +49,7 @@ GDB_OPTIONS += -ex "symbol $(KERNEL)"
 OBJ_DIR        := obj
 LIB_DIR        := lib
 BOOT_DIR       := boot
+EXBOOT_DIR     := exboot
 KERNEL_DIR     := kernel
 TEST_DIR       := test
 SEM_DIR		   := sem
@@ -55,6 +57,7 @@ GAME_DIR	   := game
 TOOLS_DIR 	   := tools
 OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
 OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
+OBJ_EXBOOT_DIR   := $(OBJ_DIR)/$(EXBOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
 OBJ_GAME_DIR   := $(OBJ_DIR)/$(GAME_DIR)
 OBJ_TEST_DIR   := $(OBJ_DIR)/$(TEST_DIR)
@@ -64,6 +67,7 @@ LD_SCRIPT := $(shell find $(KERNEL_DIR) -name "*.ld")
 GAME_LD_SCRIPT	 := $(shell find $(GAME_DIR) -name "*.ld")
 TEST_LD_SCRIPT	 := $(shell find $(TEST_DIR) -name "*.ld")
 SEM_LD_SCRIPT	 := $(shell find $(SEM_DIR) -name "*.ld")
+EXBOOT_LD_SCRIPT	 := $(shell find $(EXBOOT_DIR) -name "*.ld")
 
 LIB_C := $(wildcard $(LIB_DIR)/*.c)
 LIB_O := $(LIB_C:%.c=$(OBJ_DIR)/%.o)
@@ -72,6 +76,11 @@ BOOT_S := $(wildcard $(BOOT_DIR)/*.S)
 BOOT_C := $(wildcard $(BOOT_DIR)/*.c)
 BOOT_O := $(BOOT_S:%.S=$(OBJ_DIR)/%.o)
 BOOT_O += $(BOOT_C:%.c=$(OBJ_DIR)/%.o)
+
+EXBOOT_S := $(wildcard $(EXBOOT_DIR)/*.S)
+EXBOOT_C := $(wildcard $(EXBOOT_DIR)/*.c)
+EXBOOT_O := $(EXBOOT_S:%.S=$(OBJ_DIR)/%.o)
+EXBOOT_O += $(EXBOOT_C:%.c=$(OBJ_DIR)/%.o)
 
 KERNEL_C := $(shell find $(KERNEL_DIR) -name "*.c")
 KERNEL_S := $(shell find $(KERNEL_DIR) -name "*.S")
@@ -93,7 +102,7 @@ COPY2MYFS_C := $(TOOLS_DIR)/copy2myfs.c
 READ_MYFS_C := $(TOOLS_DIR)/read_myfs.c
 FS_H := $(TOOLS_DIR)/fs.h
 
-$(IMAGE): $(BOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
+$(IMAGE): $(BOOT) $(EXBOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
 	@mkdir -p $(BIN_DIR)
 #	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
 #	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
@@ -101,10 +110,11 @@ $(IMAGE): $(BOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
 	@echo Use 'formatter' to format disk.
 	@echo Use 'copy2myfs' to copy all the programmes and data files to disk.
 	@cd ./bin; ./formatter; ./copy2myfs
+	mv $(BIN_DIR)/$(IMAGE) $(IMAGE)
 	@echo
 	@echo Disk building succeed!
 	@echo -----------------------------------------------------------
-	mv $(BIN_DIR)/$(IMAGE) $(IMAGE)
+	
 
 $(FORMATTER): $(FORMATTER_C) $(FS_H)
 	@mkdir -p $(BIN_DIR)
@@ -136,6 +146,17 @@ $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.[cS]
 	@echo cc $< -o $@
 	@$(CC) $(CFLAGS) -Os -I ./boot/include $< -o $@
 	
+	
+$(EXBOOT): $(EXBOOT_LD_SCRIPT)
+$(EXBOOT): $(EXBOOT_O)
+	@mkdir -p $(BIN_DIR)
+	@echo ld -o $@
+	@$(LD) -m elf_i386 -T $(EXBOOT_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+$(OBJ_EXBOOT_DIR)/%.o: $(EXBOOT_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)/$(dir $<)
+	@echo cc $< -o $@
+	@$(CC) $(CFLAGS) -I ./exboot/include $< -o $@
+
 
 $(PROGRAM): $(KERNEL) $(GAME) $(TEST) $(SEM)
 	@mkdir -p $(BIN_DIR)
@@ -164,7 +185,9 @@ $(GAME): $(GAME_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
 	@echo ld -o $@
 	@$(LD) -m elf_i386 -T $(GAME_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-	cp -r $(GAME_DAT) $(BIN_DIR)		#copy game data to bin directory
+#	copy game data to bin directory
+	cp -r $(GAME_DAT) $(BIN_DIR)		
+
 
 $(OBJ_GAME_DIR)/%.o: $(GAME_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)/$(dir $<)
