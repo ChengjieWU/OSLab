@@ -15,6 +15,9 @@ bool hasBlocked;
 uint32_t request_for_page();
 PDE* init_updir();
 
+void file_close_all();
+
+
 void init_PCB()
 {
 	pcb_ready_list = NULL;
@@ -34,6 +37,11 @@ void init_PCB()
 		pcb_pool[i].cpuTime = 0;
 		pcb_pool[i].sleepTime = 0;
 		pcb_pool[i].thread = NULL;
+		
+		int j;
+		for (j = 0; j < fcbmax; j++)
+			pcb_pool[i].fcb_index[j] = -1;
+		
 		pcb_pool[i].next = pcb_free_list;
 		pcb_free_list = &pcb_pool[i];
 	}
@@ -61,6 +69,10 @@ void pcb_free(PCB *pcb)
 	pcb->cpuTime = 0;
 	pcb->sleepTime = 0;
 	pcb->thread = NULL;
+	
+	/*###### Only for a process exit by itself! ######*/
+	file_close_all();
+	
 	pcb->next = pcb_free_list;
 	pcb_free_list = pcb;
 }

@@ -6,6 +6,8 @@
 #define KERNEL_STACK_SIZE 1
 #define PCB_NUM 64					/* The maximum number of PCB terms is 64. */
 
+#define fcbmax 10
+
 enum STATE {
     PROCESS_EMPTY,
     PROCESS_RUNNING,
@@ -29,6 +31,7 @@ typedef struct PCB {
 	uint32_t cpuTime;
 	int sleepTime;
 	wthread *thread;
+	int fcb_index[fcbmax];
 } PCB;
 
 extern PCB idle;

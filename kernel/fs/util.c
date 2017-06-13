@@ -9,6 +9,7 @@ extern struct inode Inode[FILENUM];
 extern struct FCB fcb[FCBNUM];
 extern struct FCB *fcb_free_list;
 
+int pcb_fcb_free(int fd);
 
 int fcb_allocate()
 {

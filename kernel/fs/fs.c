@@ -22,6 +22,10 @@ void write_a_sect_of_file(int block_num, int inode_offset);
 void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count);
 void write_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count);
 
+/* Implemented in pcbfile.c */
+int pcb_fcb_add(int fd);
+bool pcb_fcb_test(int fd);
+int pcb_fcb_free(int fd);
 
 void init_fs()
 {
@@ -50,7 +54,19 @@ void fs_writeback()
 	writesect_n((uint8_t *)Inode, INODEOFFSET, FILENUM);
 	writesect_n((uint8_t *)&root, ROOTOFFSET, 1);
 }
-
+/* Return 0 is successful. Otherwise return -1. */
+int close(int fd)
+{
+	if (fd < 0 || fd >= FCBNUM) return -1;
+	if (pcb_fcb_free(fd) == -1) return -1;
+	fcb[fd].state = FS_CLOSE;
+	fcb[fd].offset = 0;
+	fcb[fd].direntry = NULL;
+	fcb[fd].inode_offset = 0;
+	fcb[fd].file_size = 0;
+	fcb_free(fd);
+	return 0;
+}
 /* Return fd. If don't open it, return -1. */
 int open(const char *pathname, enum FS_STATE state)
 {
@@ -67,6 +83,7 @@ int open(const char *pathname, enum FS_STATE state)
 	else if (state == FS_CLOSE) return -1;
 	int fd = fcb_allocate();
 	if (fd == -1) panic("No free fcb!\n");
+	if (pcb_fcb_add(fd) == -1) {fcb_free(fd); printk("A process have full files."); return -1;}
 	fcb[fd].state = state;
 	fcb[fd].offset = 0;
 	fcb[fd].inode_offset = root.entries[i].inode_offset;
@@ -80,6 +97,7 @@ int open(const char *pathname, enum FS_STATE state)
 int read(int fd, void *buf, int len)
 {
 	if (fd < 0 || fd >= FCBNUM) return -1;
+	if (pcb_fcb_test(fd) == false) return -1;
 	if (fcb[fd].state != FS_READ && fcb[fd].state != FS_WR) return -1;
 	if (len <= 0) return 0;	//for safe and sound
 	unsigned char *start = (unsigned char *)buf;
@@ -94,6 +112,7 @@ int read(int fd, void *buf, int len)
 int write(int fd, void *buf, int len)
 {
 	if (fd < 0 || fd >= FCBNUM) return -1;
+	if (pcb_fcb_test(fd) == false) return -1;
 	if (fcb[fd].state != FS_WRITE && fcb[fd].state != FS_WR) return -1;
 	if (len <= 0) return 0;	//for safe and sound
 	unsigned char *start = (unsigned char *)buf;
@@ -125,6 +144,7 @@ int lseek(int fd, int offset, enum FS_WHENCE whence)
 {
 	int origin = fcb[fd].offset;
 	if (fd < 0 || fd >= FCBNUM) return -1;
+	if (pcb_fcb_test(fd) == false) return -1;
 	if (fcb[fd].state != FS_READ && fcb[fd].state != FS_WRITE && fcb[fd].state != FS_WR) return -1;
 	switch (whence)
 	{
@@ -142,19 +162,6 @@ int lseek(int fd, int offset, enum FS_WHENCE whence)
 	else if (fcb[fd].offset + offset > fcb[fd].file_size) fcb[fd].offset = fcb[fd].file_size;
 	else fcb[fd].offset += offset;
 	return fcb[fd].offset - origin;
-}
-
-/* Return 0 is successful. Otherwise return -1. */
-int close(int fd)
-{
-	if (fd < 0 || fd >= FCBNUM) return -1;
-	fcb[fd].state = FS_CLOSE;
-	fcb[fd].offset = 0;
-	fcb[fd].direntry = NULL;
-	fcb[fd].inode_offset = 0;
-	fcb[fd].file_size = 0;
-	fcb_free(fd);
-	return 0;
 }
 
 void read_first_program(unsigned char *start, int count, int offset)

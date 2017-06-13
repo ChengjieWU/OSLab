@@ -18,6 +18,9 @@ PCB* pop_blocked_list();
 int sem_init_kernel(semaphore *, int);
 int sem_post_kernel(semaphore *);
 
+/* copy fcbs */
+void copy_fcb(PCB *p, PCB *q);
+
 void fork_kernel()
 {
 	/* Add current process to ready list. */
@@ -29,6 +32,9 @@ void fork_kernel()
 	child->parent = parent->pid;
 	PDE* cpdir = child->pgdir;
 	PDE* ppdir = parent->pgdir;
+	
+	/* Copy owned fcbs. */
+	copy_fcb(child, parent);
 	
 	/* Copy kernel stack from parent to its new process. */
 	memcpy(child->kernelStackBottom, parent->kernelStackBottom, PAGE_SIZE);
@@ -82,6 +88,9 @@ void wthread_create_kernel(void *func, void *arg, wthread *thread)
 	child->parent = parent->pid;
 	PDE* cpdir = child->pgdir;
 	PDE* ppdir = parent->pgdir;
+	
+	/* Copy owned fcbs. */
+	copy_fcb(child, parent);
 	
 	/* Copy kernel stack from parent to its new process. */
 	memcpy(child->kernelStackBottom, parent->kernelStackBottom, PAGE_SIZE);

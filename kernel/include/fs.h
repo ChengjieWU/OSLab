@@ -56,7 +56,7 @@ struct inode {
 
 /* The followings are not in other versions. */
 
-#define FCBNUM 20
+#define FCBNUM 50
 
 enum FS_STATE {
     FS_WRITE,
