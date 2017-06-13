@@ -7,12 +7,10 @@ KERNEL := $(BIN_DIR)/kernel.bin
 TEST   := $(BIN_DIR)/test.bin
 SEM	   := $(BIN_DIR)/sem.bin
 GAME   := $(BIN_DIR)/game.bin
-PROGRAM := $(BIN_DIR)/program.bin
 FORMATTER := $(BIN_DIR)/formatter
 COPY2MYFS := $(BIN_DIR)/copy2myfs
 READ_MYFS := $(BIN_DIR)/read_myfs
 IMAGE  := disk.bin
-
 
 
 # Could be switched between GAME, TEST and SEM.
@@ -102,14 +100,15 @@ COPY2MYFS_C := $(TOOLS_DIR)/copy2myfs.c
 READ_MYFS_C := $(TOOLS_DIR)/read_myfs.c
 FS_H := $(TOOLS_DIR)/fs.h
 
-$(IMAGE): $(BOOT) $(EXBOOT) $(PROGRAM) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS)
+$(IMAGE): $(BOOT) $(EXBOOT) $(KERNEL) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS) $(GAME) $(TEST) $(SEM)
 	@mkdir -p $(BIN_DIR)
 #	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
 #	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
 #	@$(DD) if=$(PROGRAM) of=$(IMAGE) seek=128 conv=notrunc > /dev/null # 填充 kernel, 跨过 mbr?  boot!!!
-	@echo Use 'formatter' to format disk.
-	@echo Use 'copy2myfs' to copy all the programmes and data files to disk.
-	@cd ./bin; ./formatter; ./copy2myfs
+	@echo Use formatter to format disk.
+	@cd ./bin; ./formatter
+	@echo Use copy2myfs to copy all the programmes and data files to disk.
+	@cd ./bin; ./copy2myfs
 	mv $(BIN_DIR)/$(IMAGE) $(IMAGE)
 	@echo
 	@echo Disk building succeed!
@@ -156,10 +155,6 @@ $(OBJ_EXBOOT_DIR)/%.o: $(EXBOOT_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)/$(dir $<)
 	@echo cc $< -o $@
 	@$(CC) $(CFLAGS) -I ./exboot/include $< -o $@
-
-
-$(PROGRAM): $(KERNEL) $(GAME) $(TEST) $(SEM)
-	@mkdir -p $(BIN_DIR)
 
 
 $(KERNEL): $(LD_SCRIPT)
@@ -219,14 +214,10 @@ $(OBJ_SEM_DIR)/%.o: $(SEM_DIR)/%.c
 	@$(CC) $(CFLAGS) -I ./sem/include $< -o $@
 
 	
-
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)
 
-.PHONY: qemu debug gdb clean submit run
-
-run:
-	$(QEMU) $(QEMU_OPTIONS) $(IMAGE)
+.PHONY: qemu debug gdb clean submit
 
 qemu: $(IMAGE)
 	$(QEMU) $(QEMU_OPTIONS) $(IMAGE)
@@ -249,4 +240,4 @@ clean:
 
 submit: clean
 	cd .. && tar cvj $(shell pwd | grep -o '[^/]*$$') > $(STU_ID).tar.bz2
-
+	

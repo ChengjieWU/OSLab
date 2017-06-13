@@ -8,17 +8,14 @@ ENTRY(exbootmain)  /* 入口函数，你可以不定义成 main，只要是代�
 
 SECTIONS
 {
-	/* Paging has been implemented, and the virtual address can be set to 0x8048000. */
-	/**
-	 * 可执行程序的地址空间从 32MB 往上开始
-	 */
-	/*. = 0x2000000;*/
-	. = 0xa00000;
+	/* 0x80000 is within base memory, and is reserved so that it can be used. */
+	/* Temporarily, the extend boot is 0x4a94 big, safe to fit in. */
+	/* On my mac, there's a BIOS-mem in OS course's directory. It will be helpful to refer to it. */
+	. = 0x80000;
 
 	PROVIDE(start = .);
 
-	/*.text : AT(0x2000000) {   AT 指定物理地址 */
-	.text : AT(0xa00000) {
+	.text : AT(0x80000) {
 		*(.text .text.*)
 	}
 

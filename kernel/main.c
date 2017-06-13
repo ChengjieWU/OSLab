@@ -16,9 +16,6 @@
 //#define GAME_OFFSET_IN_DISK KMEM + ELF_OFFSET_IN_DISK
 //void readseg(unsigned char *, int, int);
 
-/* Only used in loading the first user programme. */
-void read_file(unsigned char *start, int count, int offset);
-
 #ifdef IA32_PAGE
 void init_page();
 void init_mm();
@@ -47,6 +44,8 @@ void first_loader();
 void printk_test();
 
 void init_fs();	//initialize file system
+/* Only used in loading the first user programme. */
+void read_first_program(unsigned char *start, int count, int offset);
 
 int main()
 {
@@ -111,6 +110,7 @@ void init()
 	panic("\tshould not get here!");
 }
 
+
 void first_loader()
 {
 	printk("\tCreating the frist process...\n");
@@ -128,14 +128,14 @@ void first_loader()
 	elf = (struct Elf*)buf;
 
 	//readseg((unsigned char*)elf, 4096, GAME_OFFSET_IN_DISK);
-	read_file((unsigned char*)elf, 4096, 0);
+	read_first_program((unsigned char*)elf, 4096, 0);
 
 	ph = (struct Proghdr*)((char *)elf + elf->e_phoff);
 	eph = ph + elf->e_phnum;
 	for(; ph < eph; ph ++) {
 		pa = (unsigned char*)ph->p_pa;
 		//readseg(pa, ph->p_filesz, GAME_OFFSET_IN_DISK + ph->p_offset);
-		read_file(pa, ph->p_filesz, ph->p_offset);
+		read_first_program(pa, ph->p_filesz, ph->p_offset);
 		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
 	}
 	

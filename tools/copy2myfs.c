@@ -101,6 +101,8 @@ void copy_file(const char *filename)
 	
 	fclose(kernel);
 	fclose(disk);
+	
+	printf("Copy %s to disk\n", filename);
 }
 
 
@@ -113,8 +115,5 @@ int main()
 	copy_file("universe.dat\0");
 	copy_file("success.dat\0");
 	copy_file("failure.dat\0");
-	
-	
-	
 	return 0;
 }

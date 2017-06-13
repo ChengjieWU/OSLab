@@ -36,6 +36,13 @@ memcpy(void *dst, const void *src, int n)
 	return dst;
 }
 
+int
+strcmp(const char *p, const char *q)
+{
+	while (*p && *p == *q)
+		p++, q++;
+	return (int) ((unsigned char) *p - (unsigned char) *q);
+}
 
 void read_a_sect_of_file(int block_num, int inode_offset)
 {
@@ -56,7 +63,7 @@ void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int
 	int start_bias = offset % blocksize;
 	int start_length = blocksize - start_bias;
 	int start_block = offset / blocksize;
-	int end_block = (offset + count - 1) / blocksize;/***************/
+	int end_block = (offset + count - 1) / blocksize;
 	
 	if (start_block == end_block)
 	{
@@ -83,9 +90,12 @@ void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int
 	}
 }
 
-void read_file(unsigned char *start, int count, int offset)
+void read_kernel_file(unsigned char *start, int count, int offset)
 {
-	int inode_offset = root.entries[0].inode_offset;
+	int i;
+	for (i = 0; i < blocksize / sizeof(struct dirent); i++)
+		if (strcmp(root.entries[i].filename, "kernel.bin\0") == 0) break;
+	int inode_offset = root.entries[i].inode_offset;
 	if (count <= 0) return;	//for safe and sound
 	read_a_part_of_file(start, inode_offset, offset, count);
 }

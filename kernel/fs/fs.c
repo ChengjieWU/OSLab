@@ -157,10 +157,14 @@ int close(int fd)
 	return 0;
 }
 
-void read_file(unsigned char *start, int count, int offset)
+void read_first_program(unsigned char *start, int count, int offset)
 {
-	if (root.entries[2].file_size == 0) panic("The loaded file is empty!\n");
-	int inode_offset = root.entries[2].inode_offset;
+	int i;
+	for (i = 0; i < blocksize / sizeof(struct dirent); i++)
+		if (strcmp(root.entries[i].filename, "game.bin\0") == 0) break;
+	if (i == blocksize / sizeof(struct dirent)) panic("No game is found!\n");
+	if (root.entries[i].file_size == 0) panic("The loaded file is empty!\n");
+	int inode_offset = root.entries[i].inode_offset;
 	if (count <= 0) return;	//for safe and sound
 	read_a_part_of_file(start, inode_offset, offset, count);
 }

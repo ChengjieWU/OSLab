@@ -18,13 +18,27 @@ int main()
 	if (EXBOOT > 0) 
 	{
 		FILE *exboot = fopen("exboot.bin", "rb");
+		fseek(exboot, 0, SEEK_END);
+		unsigned exboot_size = ftell(exboot);
+		fseek(exboot, 0, SEEK_SET);
+		int exboot_block = exboot_size / blocksize + !!(exboot_size % blocksize);
+		
+		if (exboot_block > EXBOOT) printf("exboot too large! ERROR!\n");
+		else printf("OK: extended boot is %d bytes (max %d)\n", exboot_size, EXBOOT * blocksize);
+		
 		int extended_boot;
-		for (extended_boot = 0; extended_boot < EXBOOT; extended_boot++)
-		{
+		for (extended_boot = 0; extended_boot < exboot_block; extended_boot++)
+		{	
+			memset(buffer, 0, sizeof buffer);
 			fread(buffer, blocksize, 1, exboot);
 			fwrite(buffer, blocksize, 1, disk);
 		}
+		/* Generate empty parts. */
+		memset(buffer, 0, sizeof buffer);
+		for (extended_boot = exboot_block; extended_boot < EXBOOT; extended_boot++)
+			fwrite(buffer, blocksize, 1, disk);
 		fclose(exboot);
+		
 	}
 	
 	memset(buffer, 0, sizeof buffer);

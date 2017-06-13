@@ -33,13 +33,14 @@ void write_a_sect_of_file(int block_num, int inode_offset)
 }
 void read_a_part_of_file(unsigned char *start, int inode_offset, int offset, int count)
 {
-	if (count <= 0) return;	//for safe and sound
+	/* where this can cause a problem? count = offset = 0 then end_block = -1 */
+	if (count <= 0) return;	//for safe and sound.  
 	/* Note that currently, inode_offset is the inode index of the first inode of the file. */
 	/* offset is the offset within the whole file, and count is the number of bytes read. */
 	int start_bias = offset % blocksize;
 	int start_length = blocksize - start_bias;
 	int start_block = offset / blocksize;
-	int end_block = (offset + count - 1) / blocksize;/***************/
+	int end_block = (offset + count - 1) / blocksize;
 	
 	if (start_block == end_block)
 	{
@@ -73,7 +74,6 @@ void write_a_part_of_file(unsigned char *start, int inode_offset, int offset, in
 	int start_block = offset / blocksize;
 	/* Important note: when calculating end_block in write, we should minus 1. In read, we should not. */
 	/* The write function also. */
-	/* Why read not? Because even not minus one, the last sector read will read 0 bytes, which is ok. */
 	int end_block = (offset + count - 1) / blocksize;
 	
 	if (start_block == end_block)
