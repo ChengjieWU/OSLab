@@ -4,5 +4,8 @@
 #include "scan_code.h"
 
 int readKey();
+int getkey();
+char transkey();
+int getline();
 
 #endif
