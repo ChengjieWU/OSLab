@@ -27,6 +27,7 @@ int close(int fd);
 int lseek(int fd, int offset, int whence);
 int read(int fd, void *buf, int len);
 int write(int fd, void *buf, int len);
+void ls_kernel(int a, int l, int h);
 
 /*
 uint32_t mm_brk(uint32_t);
@@ -100,7 +101,7 @@ void do_syscall(TrapFrame *tf) {
 		case SYS_open: tf->eax = open((const char*)tf->ebx, tf->ecx); break;
 		case SYS_lseek: tf->eax = lseek(tf->ebx, tf->ecx, tf->edx); break;
 		case SYS_close: tf->eax = close(tf->ebx); break;
-		
+		case SYS_ls: ls_kernel(tf->ebx, tf->ecx, tf->edx); break;
 		default: panic("Unhandled system call: id = %d, eip = 0x%08x", tf->eax, tf->eip);
 	}
 }

@@ -20,7 +20,7 @@ int getline(char *strbuf)
 		else
 		{
 			char kt = transkey(key);
-			if (kt - 'a' < 0 || kt - 'a' >= 26) continue;
+			if (key != K_NULL && kt == '\0') {strbuf[0] = '\0'; return -1;}
 			printf("%c", kt);
 			strbuf[bufptr++] = kt;
 		}
@@ -60,6 +60,12 @@ char transkey(int key)
 		case K_X: return 'x';
 		case K_Y: return 'y';
 		case K_Z: return 'z';
+		case K_SPACE: return ' ';
+		case K_UP_MINUS: return '-';
+		case K_UP_PLUS: return '+';
+		case K_COMMA: return ',';
+		case K_DOT: return '.';
+		case K_SLASH: return '/';
 		case K_ENTER: return '\0';
 	}
 	return '\0';

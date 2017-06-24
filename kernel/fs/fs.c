@@ -175,3 +175,18 @@ void read_first_program(unsigned char *start, int count, int offset)
 	if (count <= 0) return;	//for safe and sound
 	read_a_part_of_file(start, inode_offset, offset, count);
 }
+
+void ls_kernel(int a, int l, int h)
+{
+	int i;
+	for (i = 0; i < blocksize / sizeof(struct dirent); i++)
+	{
+		if (root.entries[i].file_size != 0)
+		{
+			printk("%s\t", root.entries[i].filename);
+			if (h) printk("%d\t", root.entries[i].file_size);
+			if (l) printk("%d\t", root.entries[i].inode_offset);
+			printk("\n");
+		}
+	}
+}

@@ -19,6 +19,6 @@ int fclose(int fd);
 int flseek(int fd, int offset, enum FS_WHENCE whence);
 int fread(int fd, void *buf, int len);
 int fwrite(int fd, void *buf, int len);
-
+int ls(int a, int l, int h);
 
 #endif

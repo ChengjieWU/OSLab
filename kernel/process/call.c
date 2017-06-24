@@ -286,3 +286,33 @@ void drop_exec_kernel()
 	load_process_memory(pcb);
 	change_to_process(pcb);
 }
+
+
+
+
+void exec()
+{
+	PDE* pgdir = current->pgdir;
+	
+	/* Remove all physical frames. */
+	uint32_t pdir_idx;
+	for (pdir_idx = 0; pdir_idx < KOFFSET / PD_SIZE; pdir_idx++)
+	{
+		if (pgdir[pdir_idx].present)
+		{
+			PTE* pgtable = (PTE *)va_pte(&pgdir[pdir_idx]);
+			physaddr_t pa = (physaddr_t)pgdir[pdir_idx].page_frame << 12;
+			uint32_t ptable_idx;
+			for (ptable_idx = 0; ptable_idx < NR_PTE; ptable_idx++)
+			{
+				if (pgtable[ptable_idx].present)
+					page_remove(pgdir, (void *)va_byte(&pgtable[ptable_idx]));
+			}
+			page_remove_phy(pa);
+		}
+	}
+	
+	
+}
+
+

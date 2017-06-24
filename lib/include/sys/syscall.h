@@ -179,3 +179,4 @@
 #define SYS_sem_init 194
 #define SYS_sem_destroy 195
 #define SYS_drop_exec 196
+#define SYS_ls 197

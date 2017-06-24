@@ -103,3 +103,7 @@ int flseek(int fd, int offset, int whence) {
 int fread(int fd, void *buf, int len) {
 	return syscall(SYS_read, fd, buf, len);
 }
+
+int ls(int a, int l, int h) {
+	return syscall(SYS_ls, a, l, h);
+}
