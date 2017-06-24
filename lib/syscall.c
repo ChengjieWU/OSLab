@@ -107,3 +107,7 @@ int fread(int fd, void *buf, int len) {
 int ls(int a, int l, int h) {
 	return syscall(SYS_ls, a, l, h);
 }
+
+int exec(char *name) {
+	return syscall(SYS_exec, name);
+}

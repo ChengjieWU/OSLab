@@ -164,13 +164,31 @@ int lseek(int fd, int offset, enum FS_WHENCE whence)
 	return fcb[fd].offset - origin;
 }
 
+int find_file(char *name)
+{
+	int i;
+	for (i = 0; i < blocksize / sizeof(struct dirent); i++)
+		if (strcmp(root.entries[i].filename, name) == 0) break;
+	if (i == blocksize / sizeof(struct dirent)) {return -1;}
+	else if (root.entries[i].file_size == 0) {return -1;}
+	return i;
+}
+
+void load_program(int index, unsigned char *start, int count, int offset)
+{
+	int i = index;
+	int inode_offset = root.entries[i].inode_offset;
+	if (count <= 0) return;	//for safe and sound
+	read_a_part_of_file(start, inode_offset, offset, count);
+}
+
 void read_first_program(unsigned char *start, int count, int offset)
 {
 	int i;
 	for (i = 0; i < blocksize / sizeof(struct dirent); i++)
 		if (strcmp(root.entries[i].filename, "myshell.bin\0") == 0) break;
 	if (i == blocksize / sizeof(struct dirent)) panic("No game is found!\n");
-	if (root.entries[i].file_size == 0) panic("The loaded file is empty!\n");
+	else if (root.entries[i].file_size == 0) panic("The loaded file is empty!\n");
 	int inode_offset = root.entries[i].inode_offset;
 	if (count <= 0) return;	//for safe and sound
 	read_a_part_of_file(start, inode_offset, offset, count);

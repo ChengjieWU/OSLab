@@ -6,5 +6,6 @@ int getpid();
 int exit();
 int sleep(int);
 int drop_exec();
+int exec(char *name);
 
 #endif

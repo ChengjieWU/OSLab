@@ -212,11 +212,11 @@ PDE* init_updir()
 	/* Map kernel space to user space. */
 	/* IMPORTANT NOTE: PTE must be set to kernel mode to enable page protection! */
 	boot_map_region(updir, KOFFSET, PHY_MEM, 0, PTE_W);
-	
+
 	/* ###### As for vmem, since SCR_SIZE <= PD_SIZE, so it is in one pde term. I simplify it here. ###### */
 	if (SCR_SIZE > PD_SIZE) panic("The situation needs handling!\n");
 	boot_map_region(updir, VMEM_ADDR, PD_SIZE, VMEM_ADDR, PTE_W);
-	
+
 	/* This manually version to load all pages will never be used. */
 	/*
 	uint32_t aa = 0x8048000;
@@ -254,7 +254,7 @@ void page_fault_handler(TrapFrame* tf)
 			uintptr_t address = read_cr2();
 			/* This should only be used when loading user programs. */
 			/* The virtual space for user programs is 0x0 - 0xbfffffff, right below kernel, 3GB in total. */
-			if (address >= KOFFSET) panic("User_mode page fault at eip = %x!\n", tf->eip);
+			if (address >= KOFFSET) panic("Kernel_mode writing page fault at eip = %x!\n", tf->eip);
 			page_insert(current->pgdir, page_alloc(ALLOC_ZERO), (void*)address, PTE_U | PTE_W);
 		}
 		else

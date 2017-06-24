@@ -7,6 +7,7 @@
 
 #define strLength 20
 #define argNum 10
+unsigned char placeholder[1440000 * 3];
 
 void print_prompt()
 {
@@ -59,20 +60,30 @@ int cmd_ls(int argc, char argv[][strLength])
 	return ls(a, l, h);
 }
 
+
 void shell_main()
 {
+	//memset(no_use, 1, sizeof no_use);
+	printf("Welcome to myShell!\n");
 	char cmd[strLength];
 	char arg[argNum][strLength];
 	while (true) 
 	{
 		print_prompt();
 		int argc = read_command(cmd, arg);
-		if (!(argc >= 0 && argc <= argNum))
+		if (!(argc >= 0 && argc <= argNum)) printf("Illegal command!\n");
+		else if (strcmp(cmd, "ls") == 0) cmd_ls(argc, arg);
+		else
 		{
-			printf("Illegal command!\n");
-			continue;
+			char tmp[strLength]; tmp[0] = cmd[0]; tmp[1] = cmd[1]; tmp[2] = '\0';
+			if (strcmp(tmp, "./\0") == 0)
+			{
+				int i = 2;
+				while (cmd[i] != '\0') {tmp[i - 2] = cmd[i]; i++;}
+				tmp[i - 2] = '\0';
+				exec(tmp);
+			}
 		}
-		if (strcmp(cmd, "ls") == 0) cmd_ls(argc, arg);
 	}
 	exit();
 }
