@@ -81,7 +81,8 @@ void shell_main()
 				int i = 2;
 				while (cmd[i] != '\0') {tmp[i - 2] = cmd[i]; i++;}
 				tmp[i - 2] = '\0';
-				exec(tmp);
+				if (fork() == 0) exec(tmp);
+				else drop_exec();
 			}
 		}
 	}

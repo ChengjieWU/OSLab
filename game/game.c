@@ -108,7 +108,6 @@ void init_Game();
 /* Compiler won't allow main to be void, so we cannot use main. Instead, we use game_main. */
 void game_main(void)
 {
-	int opid = getpid();
 	
 	printf("We are now in game!\n");
 
@@ -120,6 +119,8 @@ void game_main(void)
 	printf("************************************\n");
 	init_Game();
 
+	/* Set the time counter. */
+	/*int opid = getpid();
 	fork();
 	if (getpid() != opid) 
 	{
@@ -130,7 +131,7 @@ void game_main(void)
 			i += 1;;
 			sleep(1000);
 		}
-	}
+	}*/
 
 
 	int key;
@@ -156,6 +157,8 @@ void game_main(void)
 			}
 		}
 	}
+	memset(Image_Universe, 0xff, sizeof Image_Universe);
+	fullVideo(Image_Universe);
 	exit();
 }
 
