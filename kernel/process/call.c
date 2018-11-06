@@ -308,6 +308,24 @@ void exec_kernel(char *name)
 		return;
 	}
 	
+	struct Elf *elf;
+	struct Proghdr *ph, *eph;
+	unsigned char *pa, *i;
+	
+	elf = (struct Elf*)exec_buf;
+	
+	load_program(index, (unsigned char*)elf, 4096, 0);
+	
+	const uint32_t elf_magic = 0x464c457f;
+	uint32_t *p_magic = (void *)exec_buf;
+	if (elf_magic != *p_magic)
+	{
+		((TrapFrame *)(current->tf))->eax = -1;
+		return;
+	}
+	
+	
+	
 	PCB* pn = new_process();
 	pn->parent = current->parent;
 	pn->pid = current->pid;
@@ -369,13 +387,7 @@ void exec_kernel(char *name)
 	/* ReLoad the new program. */
 	current = pn;
 	load_process_memory(current);
-	struct Elf *elf;
-	struct Proghdr *ph, *eph;
-	unsigned char *pa, *i;
-	
-	elf = (struct Elf*)exec_buf;
-	
-	load_program(index, (unsigned char*)elf, 4096, 0);
+
 
 	ph = (struct Proghdr*)((char *)elf + elf->e_phoff);
 	eph = ph + elf->e_phnum;
@@ -386,7 +398,6 @@ void exec_kernel(char *name)
 	}
 	
 	((TrapFrame *)(current->tf))->eip = elf->e_entry;
-	
 	
 	PCB* pcb = pop_ready_list();
 	load_process_memory(pcb);

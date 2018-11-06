@@ -63,7 +63,6 @@ int cmd_ls(int argc, char argv[][strLength])
 
 void shell_main()
 {
-	//memset(no_use, 1, sizeof no_use);
 	printf("Welcome to myShell!\n");
 	char cmd[strLength];
 	char arg[argNum][strLength];
@@ -81,9 +80,17 @@ void shell_main()
 				int i = 2;
 				while (cmd[i] != '\0') {tmp[i - 2] = cmd[i]; i++;}
 				tmp[i - 2] = '\0';
-				if (fork() == 0) exec(tmp);
+				if (fork() == 0)
+				{
+					if (exec(tmp) == -1)
+					{
+						printf("No such file or not executable!\n");
+						exit();
+					}
+				}
 				else drop_exec();
 			}
+			else printf("Illegal command!\n");
 		}
 	}
 	exit();
