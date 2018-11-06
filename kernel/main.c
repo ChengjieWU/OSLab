@@ -116,6 +116,7 @@ void first_loader()
 	printk("\tCreating the frist process...\n");
 	PCB *pro = new_process();
 	pro = pop_ready_list();
+	shell = pro;
 	load_process_memory(pro);
 	change_to_process(pro);
 

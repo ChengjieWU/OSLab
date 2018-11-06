@@ -108,11 +108,9 @@ void init_Game();
 /* Compiler won't allow main to be void, so we cannot use main. Instead, we use game_main. */
 void game_main(void)
 {
-	//fork();
-	//printf("I'm process No.%d\n", getpid());
 	
 	printf("We are now in game!\n");
-	
+
 	printf("Loading...\n\n");
 	read_data();
 	
@@ -120,8 +118,11 @@ void game_main(void)
 	printf("README:\nSpace --- pause or start\nQ --- quit\nLeft Arrow --- move left\nRight Arrow --- move right\n\n");
 	printf("************************************\n");
 	init_Game();
+
+	/* Set the time counter. */
+	/*int opid = getpid();
 	fork();
-	if (getpid() == 1) 
+	if (getpid() != opid) 
 	{
 		int i = 0;
 		while(true)
@@ -130,7 +131,9 @@ void game_main(void)
 			i += 1;;
 			sleep(1000);
 		}
-	}
+	}*/
+
+
 	int key;
 	while (true)
 	{
@@ -154,6 +157,8 @@ void game_main(void)
 			}
 		}
 	}
+	memset(Image_Universe, 0xff, sizeof Image_Universe);
+	fullVideo(Image_Universe);
 	exit();
 }
 

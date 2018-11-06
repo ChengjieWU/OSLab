@@ -7,6 +7,7 @@ KERNEL := $(BIN_DIR)/kernel.bin
 TEST   := $(BIN_DIR)/test.bin
 SEM	   := $(BIN_DIR)/sem.bin
 GAME   := $(BIN_DIR)/game.bin
+MYSHELL  := $(BIN_DIR)/myshell.bin
 FORMATTER := $(BIN_DIR)/formatter
 COPY2MYFS := $(BIN_DIR)/copy2myfs
 READ_MYFS := $(BIN_DIR)/read_myfs
@@ -52,17 +53,20 @@ KERNEL_DIR     := kernel
 TEST_DIR       := test
 SEM_DIR		   := sem
 GAME_DIR	   := game
+MYSHELL_DIR    := myshell
 TOOLS_DIR 	   := tools
 OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
 OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
 OBJ_EXBOOT_DIR   := $(OBJ_DIR)/$(EXBOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
 OBJ_GAME_DIR   := $(OBJ_DIR)/$(GAME_DIR)
+OBJ_MYSHELL_DIR  := $(OBJ_DIR)/$(MYSHELL_DIR)
 OBJ_TEST_DIR   := $(OBJ_DIR)/$(TEST_DIR)
 OBJ_SEM_DIR   := $(OBJ_DIR)/$(SEM_DIR)
 
 LD_SCRIPT := $(shell find $(KERNEL_DIR) -name "*.ld")
 GAME_LD_SCRIPT	 := $(shell find $(GAME_DIR) -name "*.ld")
+MYSHELL_LD_SCRIPT  := $(shell find $(MYSHELL_DIR) -name "*.ld")
 TEST_LD_SCRIPT	 := $(shell find $(TEST_DIR) -name "*.ld")
 SEM_LD_SCRIPT	 := $(shell find $(SEM_DIR) -name "*.ld")
 EXBOOT_LD_SCRIPT	 := $(shell find $(EXBOOT_DIR) -name "*.ld")
@@ -89,6 +93,9 @@ GAME_C := $(shell find $(GAME_DIR) -name "*.c")
 GAME_O := $(GAME_C:%.c=$(OBJ_DIR)/%.o)
 GAME_DAT := $(shell find $(GAME_DIR) -name "*.dat")
 
+MYSHELL_C := $(shell find $(MYSHELL_DIR) -name "*.c")
+MYSHELL_O := $(MYSHELL_C:%.c=$(OBJ_DIR)/%.o)
+
 SEM_C := $(shell find $(SEM_DIR) -name "*.c")
 SEM_O := $(SEM_C:%.c=$(OBJ_DIR)/%.o)
 
@@ -100,7 +107,7 @@ COPY2MYFS_C := $(TOOLS_DIR)/copy2myfs.c
 READ_MYFS_C := $(TOOLS_DIR)/read_myfs.c
 FS_H := $(TOOLS_DIR)/fs.h
 
-$(IMAGE): $(BOOT) $(EXBOOT) $(KERNEL) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS) $(GAME) $(TEST) $(SEM)
+$(IMAGE): $(BOOT) $(EXBOOT) $(KERNEL) $(FORMATTER) $(COPY2MYFS) $(READ_MYFS) $(GAME) $(TEST) $(SEM) $(MYSHELL)
 	@mkdir -p $(BIN_DIR)
 #	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null # 准备磁盘文件	total size: 5000 KB
 #	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null # 填充 boot loader
@@ -183,11 +190,22 @@ $(GAME): $(GAME_O) $(LIB_O)
 #	copy game data to bin directory
 	cp -r $(GAME_DAT) $(BIN_DIR)		
 
-
 $(OBJ_GAME_DIR)/%.o: $(GAME_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)/$(dir $<)
 	@echo cc $< -o $@
 	@$(CC) $(CFLAGS) -I ./game/include $< -o $@
+	
+
+$(MYSHELL): $(MYSHELL_LD_SCRIPT)
+$(MYSHELL): $(MYSHELL_O) $(LIB_O)
+	@mkdir -p $(BIN_DIR)
+	@echo ld -o $@
+	@$(LD) -m elf_i386 -T $(MYSHELL_LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+$(OBJ_MYSHELL_DIR)/%.o: $(MYSHELL_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)/$(dir $<)
+	@echo cc $< -o $@
+	@$(CC) $(CFLAGS) -I ./myshell/include $< -o $@
 	
 	
 $(TEST): $(TEST_LD_SCRIPT)

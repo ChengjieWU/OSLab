@@ -88,3 +88,5 @@
 #define K_R_0		0x52
 #define K_R_DOT		0x53
 #define K_R_ALT		0x54	//may be wrong
+
+#define K_NULL		0xff

@@ -4,6 +4,7 @@
 
 PCB idle;
 PCB* current = &idle;
+PCB* shell;
 PCB pcb_pool[PCB_NUM];
 PCB* pcb_free_list;
 PCB* pcb_ready_list;
@@ -89,18 +90,38 @@ void add_ready_list(PCB* pcb)		//add to tail
 		p->next = pcb;
 	}
 }
+
+int ready_list_length()
+{
+	int len = 0;
+	PCB *p = pcb_ready_list;;
+	while (p != NULL) {p = p->next; len += 1;}
+	return len;
+}
+
 PCB* pop_ready_list()				//pop the head
 {
+	bool overshell = ready_list_length() > 1;
 	if (pcb_ready_list != NULL)
 	{
 		PCB* p = pcb_ready_list;
 		pcb_ready_list = pcb_ready_list->next;
 		p->next = NULL;
+		//printk("%d\n", ready_list_length());
+		if (overshell && p == shell)
+		{
+			//printk("%d\n", ready_list_length());
+			add_ready_list(p);
+			p = pop_ready_list();
+		}
 		return p;
 	}
 	else 
 		return NULL;
 }
+
+
+
 /* Add current process to blocked list according to its sleep time. */
 void add_blocked_list(PCB* pcb, uint32_t t)
 {

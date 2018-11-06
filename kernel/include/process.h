@@ -36,6 +36,8 @@ typedef struct PCB {
 
 extern PCB idle;
 extern PCB* current;
+extern PCB* shell;
+
 extern TSS tss;
 
 

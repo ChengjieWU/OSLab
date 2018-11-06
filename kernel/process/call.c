@@ -3,6 +3,7 @@
 #include "irq.h"
 #include "memory.h"
 #include "wthread.h"
+#include "elf.h"
 
 PCB* new_process();
 void change_to_process(PCB *);
@@ -20,6 +21,10 @@ int sem_post_kernel(semaphore *);
 
 /* copy fcbs */
 void copy_fcb(PCB *p, PCB *q);
+
+/* load programes */
+int find_file(char *name);
+int load_program(int index, unsigned char *start, int count, int offset);
 
 void fork_kernel()
 {
@@ -286,3 +291,117 @@ void drop_exec_kernel()
 	load_process_memory(pcb);
 	change_to_process(pcb);
 }
+
+
+
+/*###### ######*/
+
+uint8_t exec_buf[4096];
+
+void exec_kernel(char *name)
+{	
+	/* Test if such program is valid. If it is not, set return value -1. */
+	int index = find_file(name);
+	if (index == -1)
+	{
+		((TrapFrame *)(current->tf))->eax = -1;
+		return;
+	}
+	
+	struct Elf *elf;
+	struct Proghdr *ph, *eph;
+	unsigned char *pa, *i;
+	
+	elf = (struct Elf*)exec_buf;
+	
+	load_program(index, (unsigned char*)elf, 4096, 0);
+	
+	const uint32_t elf_magic = 0x464c457f;
+	uint32_t *p_magic = (void *)exec_buf;
+	if (elf_magic != *p_magic)
+	{
+		((TrapFrame *)(current->tf))->eax = -1;
+		return;
+	}
+	
+	
+	
+	PCB* pn = new_process();
+	pn->parent = current->parent;
+	pn->pid = current->pid;
+	copy_fcb(pn, current);
+	
+	
+	/* Copy kernel stack. */
+	memcpy(pn->kernelStackBottom, current->kernelStackBottom, PAGE_SIZE);
+	pn->tf = (void *)((uint32_t)pn->kernelStackBottom + ((uint32_t)current->tf - (uint32_t)current->kernelStackBottom));
+	
+	unsigned pdir_idx;
+	
+	/* copy page directory, page table and physical frames. */
+	PDE* cpdir = pn->pgdir;
+	PDE* ppdir = current->pgdir;
+	
+	for (pdir_idx = 0; pdir_idx < KOFFSET / PD_SIZE; pdir_idx++)
+	{
+		cpdir[pdir_idx] = ppdir[pdir_idx];
+		if (cpdir[pdir_idx].present)
+		{
+			PTE* cptable = (PTE*)request_for_page();
+			make_pde(&cpdir[pdir_idx], va_to_pa(cptable));
+			PTE* pptable = (PTE*)va_pte(&ppdir[pdir_idx]);
+			uint32_t ptable_idx;
+			for (ptable_idx = 0; ptable_idx < NR_PTE; ptable_idx++)
+			{
+				cptable[ptable_idx] = pptable[ptable_idx];
+				if (cptable[ptable_idx].present)
+				{
+					uint8_t *cc = (uint8_t *)request_for_page();
+					make_pte(&cptable[ptable_idx], va_to_pa(cc));
+					uint8_t *pc = (uint8_t *)va_byte(&pptable[ptable_idx]);
+					memcpy(cc, pc, PAGE_SIZE);
+				}
+			}
+		}
+	}
+	
+	/* Delete the original process. */
+	PDE* pgdir = current->pgdir;
+	for (pdir_idx = 0; pdir_idx < KOFFSET / PD_SIZE; pdir_idx++)
+	{
+		if (pgdir[pdir_idx].present)
+		{
+			PTE* pgtable = (PTE *)va_pte(&pgdir[pdir_idx]);
+			physaddr_t pa = (physaddr_t)pgdir[pdir_idx].page_frame << 12;
+			uint32_t ptable_idx;
+			for (ptable_idx = 0; ptable_idx < NR_PTE; ptable_idx++)
+			{
+				if (pgtable[ptable_idx].present)
+					page_remove(pgdir, (void *)va_byte(&pgtable[ptable_idx]));
+			}
+			page_remove_phy(pa);
+		}
+	}
+	pcb_free(current);
+	
+	/* ReLoad the new program. */
+	current = pn;
+	load_process_memory(current);
+
+
+	ph = (struct Proghdr*)((char *)elf + elf->e_phoff);
+	eph = ph + elf->e_phnum;
+	for(; ph < eph; ph ++) {
+		pa = (unsigned char*)ph->p_pa;
+		load_program(index, pa, ph->p_filesz, ph->p_offset);
+		for(i = pa + ph->p_filesz; i < pa + ph->p_memsz; *i ++ = 0);
+	}
+	
+	((TrapFrame *)(current->tf))->eip = elf->e_entry;
+	
+	PCB* pcb = pop_ready_list();
+	load_process_memory(pcb);
+	change_to_process(pcb);
+}
+
+
